@@ -1,3 +1,0 @@
-#!/bin/sh
-echo '<<<girders_healthcheck>>>'
-curl --max-redirs 4 --silent http://localhost/healthcheck.json | jq '.dependencies'
