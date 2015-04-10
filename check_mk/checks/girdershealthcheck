@@ -6,9 +6,10 @@ def inventory_girdershealthcheck(info):
       url = info.pop(0)
    data = get_girders_json(info)
    inventory = []
-   for entry in data:
+   for entry in data['dependencies']:
       item = "{0}".format(entry['name'])
       inventory.append( (item, None) )
+   inventory.append( ('OverallStatus', None) )
    info.insert(0, url)
    return inventory 
 
@@ -18,7 +19,7 @@ def check_girdershealthcheck(item, params, info):
       url= info.pop(0)
    data = get_girders_json(info)
    info.insert(0,url)
-   for entry in data:
+   for entry in data['dependencies']:
       if item in entry["name"]:
          if 'OK' in entry["status"]:
             return (0, "{0} Check '{1}' is OK: {2} {3}".format(entry["type"], entry["name"], entry["message"], url[0]) )
@@ -28,7 +29,12 @@ def check_girdershealthcheck(item, params, info):
          if 'LOCAL' in entry["type"]:
             if 'OK' not in entry["status"]:
                return (2, "{0} Check '{1}' is critical: {2} {3}".format(entry["type"], entry["name"], entry["message"], url[0]) )
-    
+   if item in 'OverallStatus':
+      if 'OK' in data["status"]:
+         return (0, "Overall Check is OK.".format(url[0]) )
+      if 'OK' not in data["status"]:
+         return (2, "Overall Status is CRITICAL!".format(url[0]) )
+         
    return (3, "something went wrong in the check_mk check script")
 
 # declare the check to Check_MK
