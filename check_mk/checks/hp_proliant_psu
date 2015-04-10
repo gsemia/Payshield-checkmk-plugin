@@ -1,0 +1,64 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+hp_proliant_psu_status_map = { 1: 'other', 2: 'ok', 3: 'degraded', 4: 'failed' }
+hp_proliant_status2nagios_map = { 'other': 3, 'ok': 0, 'degraded': 2, 'failed': 2 }
+hp_proliant_present_map = { 1: 'other', 2: 'absent', 3: 'present' }
+hp_proliant_redundant_map = { 1: 'other', 2: 'notRedundant', 3: 'redundant' }
+
+def inventory_hp_proliant_psu(info):
+    if len(info) > 0:
+        return [ (line[0] + '/' + line[1], None) for line in info if line[2] == '3' ]
+
+def check_hp_proliant_psu(item, params, info):
+    for line in info:
+        if '/' in item and line[0] + '/' + line [1] == item or line[0] == item:
+            chassis, bay, present, status, redundant = line
+            snmp_status = hp_proliant_psu_status_map[int(status)]
+            status      = hp_proliant_status2nagios_map[snmp_status]
+
+            return (status, 'PSU in chassis %s, bay %s is in state "%s"' %
+                         (chassis, bay, snmp_status))
+    return (3, "item not found in snmp data")
+
+check_info["hp_proliant_psu"] = {
+    'check_function':          check_hp_proliant_psu,
+    'inventory_function':      inventory_hp_proliant_psu,
+    'service_description':     'HW PSU %s',
+    'snmp_info':               (
+        ".1.3.6.1.4.1.232.6.2.9.3.1", [
+            "1", # cpqHeFltTolPowerSupplyChassis
+            "2", # cpqHeFltTolPowerSupplyBay
+            "3", # cpqHeFltTolPowerSupplyPresent
+            "4", # cpqHeFltTolPowerSupplyCondition
+            "9", # cpqHeFltTolPowerSupplyRedundant
+        ]
+    ),
+    'snmp_scan_function':      \
+         lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower(),
+}

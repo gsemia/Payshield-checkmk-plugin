@@ -1,0 +1,125 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# Agent output not included since it has almost 100 lines
+# it's available in our archive or fh's bitbucket
+
+# Load a fake controller with known good values for the most
+# important parameters only and try to define their importance
+megaraid_bbu_refvalues = {
+    'Remaining Capacity Low'                    : ('No', 1),    # nolearn
+    'I2c Errors Detected'                       : ('No', 1),
+    'Temperature'                               : ('OK', 2),
+    'Pack is about to fail & should be replaced': ('No', 1),
+    'Charging Status'                           : ('None', 1),  # nolearn
+    'Battery State'                             : ('Operational', 2),  # nolearn
+    'Learn Cycle Status'                        : ('OK', 1),
+    'Learn Cycle Active'                        : ('No', 0),
+    'Battery Pack Missing'                      : ('No', 2),
+    'Battery Replacement required'              : ('No', 1),
+    'Over Temperature'                          : ('No', 2),
+    'Over Charged'                              : ('No', 1),
+    'Voltage'                                   : ('OK', 2),   # nolearn
+}
+
+
+def megaraid_bbu_parse(info):
+    controllers = {}
+    current_hba = None
+    for line in info:
+        joined = " ".join(line)
+        if ":" not in joined:
+            continue # skip garbage lines
+        name, data = joined.split(":")
+        name = name.strip()
+        data = data.strip()
+
+        # Scan each controller into its own dictionary
+        if name in [ "BBU status for Adapter", "BBU status for Adpater" ]:
+            current_hba = {}
+            controllers[data] = current_hba
+        elif current_hba != None:
+            # We lose the numerical temperature here
+            # (same key is used twice in output of megacli)
+            current_hba[name] = data
+    return controllers
+
+
+def inventory_megaraid_bbu(info):
+    return [ (name, None) for name in megaraid_bbu_parse(info) ]
+
+
+def check_megaraid_bbu(item, _no_params, info):
+    controllers = megaraid_bbu_parse(info)
+    if item not in controllers:
+        return (3, "Controller data not found in agent output")
+
+    controller = controllers[item]
+    broken = []
+    state  = 0
+    # get current charge level
+    if 'Relative State of Charge' not in controller:
+        charge = ", No charge information reported for this controller"
+    else:
+        charge = ", Charge is %s" % controller['Relative State of Charge']
+
+    # verify defined important parameters to current level
+    for varname, (refvalue, refstate) in megaraid_bbu_refvalues.items():
+        # the try/except should handle controller types that don't have certain values
+        # if your bbu chipset fails and you still get a partial response this will lead
+        # to a false result. but people asked for it :>
+        try:
+            value = controller[varname]
+            # Some controllers report "Optimal" instead of "Operational"
+            if value == "Optimal":
+                pass
+            # Some controllers do not output Temperature: OK and Voltage: OK.
+            elif varname in [ "Temperature", "Voltage" ] and value[0].isdigit():
+                pass
+            elif value != refvalue:
+                text = '%s is %s' % (varname, value)
+                if refstate:
+                    text += ' (%s)' % ("!" * refstate)
+                text += ' (Expected: %s)' % refvalue
+    	        broken.append(text)
+    	        state = max(state, refstate)
+        except KeyError:
+            pass
+
+    if controller.get("Learn Cycle Active") == "Yes":
+        return (0, "no states to check (controller is in learn cycle)" + charge)
+    # return assembled info
+    elif broken:
+	return (state, ", ".join(broken) + charge)
+    else:
+	return (0, "all states as expected" + charge)
+
+check_info["megaraid_bbu"] = {
+    'check_function':          check_megaraid_bbu,
+    'inventory_function':      inventory_megaraid_bbu,
+    'service_description':     'RAID Adapter/BBU %s',
+}

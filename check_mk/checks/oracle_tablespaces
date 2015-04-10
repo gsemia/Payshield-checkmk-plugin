@@ -1,0 +1,278 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<oracle_tablespaces>>>
+# pengt /database/pengt/daten155/dbf/system_01.dbf SYSTEM AVAILABLE YES 38400 4194302 38392 1280 SYSTEM 8192 ONLINE
+# pengt /database/pengt/daten155/dbf/undotbs_01.dbf UNDOTBS1 AVAILABLE YES 128000 4194302 127992 640 ONLINE 8192 ONLINE
+# pengt /database/pengt/daten155/dbf/sysaux_01.dbf SYSAUX AVAILABLE YES 25600 4194302 25592 1280 ONLINE 8192 ONLINE
+# pengt /database/pengt/daten155/dbf/ts_user_01.dbf TS_USER AVAILABLE YES 8480 1280000 8472 160 ONLINE 8192 ONLINE
+# pengt /database/pengt/daten155/dbf/TS_PENG_ABR_01.dbf TS_PENG_ABR AVAILABLE YES 12800 1280000 12792 12800 ONLINE 8192 ONLINE
+
+#
+# Order of columns (it is a table of data files, so table spaces appear multiple times)
+# 0. database SID
+# 1. data file name
+# 2. table space name
+# 3. status of the data file
+# 4. whether the file is auto extensible
+# 5. current size of data file in blocks
+# 6. maximum size of data file in blocks (if auto extensible)
+# 7. currently number of blocks used by user data
+# 8. size of next increment in blocks (if auto extensible)
+# 9. wheter the file is in use (online)
+# 10. block size in bytes
+# 11. status of the table space
+# 12. free space in the datafile
+
+
+# This definition needs to be removed at a later stage
+# A previous version of this check didn't write the parameter
+# name into the autochecks file, but the parameter itself
+# default levels for *free* space. float: percent,
+# integer: MB.
+oracle_tablespaces_default_levels = (10.0, 5.0)
+
+factory_settings["oracle_tablespaces_defaults"] = {
+    "levels"         : (10.0, 5.0),
+    "magic_normsize" : 1000,
+    "levels_low"     : (0.0, 0.0)
+}
+
+# Whether to check auto extend settings
+oracle_tablespaces_check_autoext = True
+
+# Whether to check default increment size
+oracle_tablespaces_check_default_increment = True
+
+def inventory_oracle_tablespaces(info):
+    tablespaces = set([])
+    autoextensible = set([])
+    for line in info:
+        if len(line) != 13:
+            continue
+        ts = (line[0], line[2])
+        if line[11] in [ "ONLINE", "READONLY" ]:
+            tablespaces.add(ts)
+        if line[4] == "YES":
+            autoextensible.add(ts)
+
+    inventory = []
+    for t in tablespaces:
+        if oracle_tablespaces_check_autoext:
+            ae = t in autoextensible
+        else:
+            ae = None # means: ignore, only display setting
+
+        parameters = { "autoextend" : ae }
+        inventory.append(("%s.%s" % t, parameters))
+    return inventory
+
+
+def get_tablespace_levels_in_bytes(size_bytes, params):
+    # If the magic factor is used, take table size and magic factor
+    # into account in order to move levels
+    magic  = params.get("magic")
+
+    # Use tablespace size dependent dynamic levels or static levels
+    if type(params.get("levels")) == tuple:
+        warn, crit = params.get("levels")
+    else:
+        # A list of levels. Choose the correct one depending on the
+        # size of the current tablespace
+        found = False
+        for to_size, this_levels in params.get("levels"):
+            if size_bytes > to_size:
+                warn, crit = this_levels
+                found = True
+        if not found:
+            return (None, None)
+
+    if magic:
+        # convert warn/crit to percentage
+        if type(warn) != float:
+            warn = savefloat(warn * 1024 * 1024 / float(size_bytes)) * 100
+        if type(crit) != float:
+            crit = savefloat(crit * 1024 * 1024 / float(size_bytes)) * 100
+
+        normsize = params["magic_normsize"]
+        hbytes_size = size_bytes / (float(normsize) * 1024 * 1024)
+        felt_size = hbytes_size ** magic
+        scale = felt_size / hbytes_size
+        warn_scaled = 100 - (( 100 - warn ) * scale)
+        crit_scaled = 100 - (( 100 - crit ) * scale)
+
+        # Make sure, levels do never get too low due to magic factor
+        lowest_warning_level, lowest_critical_level = params["levels_low"]
+        if warn_scaled < lowest_warning_level:
+            warn_scaled = lowest_warning_level
+        if crit_scaled < lowest_critical_level:
+            crit_scaled = lowest_critical_level
+        warn_bytes = savefloat(size_bytes * warn_scaled / 100)
+        crit_bytes = savefloat(size_bytes * crit_scaled / 100)
+    else:
+        # warn/crit level are float => percentages of max size, otherwise MB
+        if type(warn) == float:
+            warn_bytes = warn / 100.0 * size_bytes
+        else:
+            warn_bytes = warn * 1024 * 1024
+
+        if type(crit) == float:
+            crit_bytes = crit / 100.0 * size_bytes
+        else:
+            crit_bytes = crit * 1024 * 1024
+
+    return warn_bytes, crit_bytes
+
+
+def check_oracle_tablespaces(item, params, info):
+    try:
+        sid, tbsname = item.split('.')
+    except ValueError:
+        return (3, 'Invalid check item given (must be <SID>.<tablespace>)')
+
+    ts_status = None
+    num_files = 0
+    num_avail = 0
+    num_extensible = 0
+    current_size = 0
+    max_size = 0
+    used = 0
+    num_increments = 0
+    increment_size = 0
+    free_space = 0
+
+    # Conversion of old autochecks params
+    if type(params) == tuple:
+        params = { "autoextend" : params[0], "levels" : params[1:] }
+
+    autoext = params.get("autoextend")
+    uses_default_increment = False
+
+    for line in info:
+        if line[0] == sid:
+            err = oracle_handle_ora_errors(line)
+            if err == False:
+                continue
+            elif isinstance(err, tuple):
+                return err
+
+            if line[2] == tbsname and len(line) == 13:
+                ts_status = line[11]
+                blocksize = int(line[10])
+                num_files += 1
+                if line[3] in [ "AVAILABLE", "ONLINE", "READONLY" ]:
+                    num_avail += 1
+                    current_size += blocksize * int(line[5])
+                    used += blocksize * (int(line[5]) - int(line[12]))
+                    # Autoextensible? Honor max size
+                    if line[4] == "YES":
+                        num_extensible += 1
+                        my_max_size = blocksize * int(line[6])
+                        max_size += my_max_size
+                        free_bl = int(line[6]) - int(line[5]) # number of free extension blocks
+                        incsize = int(line[8]) # size of next increment in blocks
+                        if incsize == 1:
+                            uses_default_increment = True
+                        incs = free_bl / incsize
+                        num_increments += incs
+                        increment_size += blocksize * incsize * incs
+                        free_space += blocksize * (incsize * incs + (int(line[12])))
+                    # not autoextensible: take current size as maximum
+                    else:
+                        my_max_size = blocksize * int(line[5])
+                        max_size += my_max_size
+                        free_space += blocksize *  int(line[12])
+
+
+    if ts_status == None:
+        return (3, "Tablespace not found")
+
+
+    infotext = "%s, size %s, used %s" % \
+       (ts_status,
+        get_bytes_human_readable(current_size),
+        get_bytes_human_readable(used))
+
+    if num_extensible > 0:
+        infotext += ", max %s" % get_bytes_human_readable(max_size)
+        infotext += " - %d increments (%s)" % \
+            (num_increments, get_bytes_human_readable(increment_size))
+
+    status = 0
+
+    # Check increment size, should not be set to default (1)
+    if oracle_tablespaces_check_default_increment:
+        if uses_default_increment:
+            infotext += ", DEFAULT INCREMENT(!)"
+            status = 1
+
+    # Check autoextend status if parameter not set to None
+    if autoext != None:
+        if autoext and num_extensible == 0:
+            infotext += ", AUTOEXTEND(!!)"
+            status = 2
+        elif not autoext and num_extensible > 0:
+            infotext += ", NO AUTOTEXTEND(!!)"
+            status = 2
+    elif num_extensible > 0:
+        infotext += ", autoextend"
+    else:
+        infotext += ", no autoextend"
+
+
+    warn, crit = get_tablespace_levels_in_bytes(max_size, params)
+
+    # Check free space, but only if status is not READONLY
+    if ts_status != "READONLY":
+        if (crit is not None and free_space <= crit) \
+           or (warn is not None and free_space <= warn):
+            infotext += ", only %s left" % get_bytes_human_readable(free_space)
+            infotext += " (levels at %s/%s)" % (
+             get_bytes_human_readable(warn), get_bytes_human_readable(crit))
+            if free_space <= crit:
+                status = 2
+            else:
+                status = max(1, status)
+
+    perfdata = [ ("size", current_size, max_size - warn, max_size - crit),
+                 ("used", used),
+                 ("max_size", max_size) ]
+
+    if num_files != 1 or num_avail != 1 or num_extensible != 1:
+        infotext += ", %d data files (%d avail, %d autoext)" % (num_files, num_avail, num_extensible)
+
+    return (status, infotext, perfdata)
+
+check_info['oracle_tablespaces'] = {
+    "service_description"     : "ORA %s Tablespace",
+    "check_function"          : check_oracle_tablespaces,
+    "inventory_function"      : inventory_oracle_tablespaces,
+    "has_perfdata"            : True,
+    "group"                   : "oracle_tablespaces",
+    "default_levels_variable" : "oracle_tablespaces_defaults",
+    "includes"                : [ "oracle.include" ]
+}
+check_config_variables.append("oracle_tablespaces_check_default_increment")

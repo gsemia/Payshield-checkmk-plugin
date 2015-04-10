@@ -1,0 +1,126 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# Slot Number: 0
+# Device Id: 4
+# Raw Size: 140014MB [0x11177330 Sectors]
+# Firmware state: Unconfigured(good)
+# Inquiry Data: FUJITSU MBB2147RC       5204BS04P9104BV5
+# Slot Number: 1
+# Device Id: 5
+# Raw Size: 140014MB [0x11177330 Sectors]
+# Firmware state: Unconfigured(good)
+# Inquiry Data: FUJITSU MBB2147RC       5204BS04P9104BSC
+
+# The agent provides some new information since 1.1.9.
+# The dev2enc infos are sent from the agent to have the
+# real enclosure numbers instead of the device ids which
+# seem to be generated somehow.
+#
+# dev2enc Enclosure 0 Device ID  6
+# dev2enc Enclosure 1 Device ID  252
+#
+# On new inventory runs the enclosure number is used as
+# index and item part.
+megaraid_pdisks_legacy_mode = False
+# This makes service descriptions backward compatible to match
+# inventory made by older versions that didn't support multiple
+# controllers
+megaraid_pdisks_adapterstr  = ['e','f','g','h','i','j','k','l']
+
+def megaraid_pdisks_parse(info):
+    adapters = { 0: {} }
+    current_adapter = adapters[0]
+    return_var = []
+    adapter = 0
+    enclosure_devid = -181
+    for line in  info:
+        if line[0] == 'adapter':
+            current_adapter = {}
+            adapters[int(line[1])] = current_adapter
+        elif line[0] == 'dev2enc':
+            if line[2].isdigit():
+                current_adapter[int(line[5])] = int(line[2])
+        elif line[0] == 'Adapter' and len(line) == 2:
+            current_adapter = adapters[int(line[1][1:])] # Raute weglassen
+            adapter = int(line[1][1:])
+        elif line[0] == "Enclosure" and line[1] == "Device":
+            try:
+	        enclosure_devid = int(line[-1])
+                # this should fix inventory problems.
+                adapters[adapter][enclosure_devid] = enclosure_devid
+
+	    except: # no enclosure device
+	 	enclosure_devid = 0
+		adapters[adapter][0] = 0
+        elif line[0] == "Enclosure" and line[1] == "Number:":
+            for devid, number in current_adapter.items():
+                if number == int(line[-1]):
+                    enclosure_devid = devid
+                    break
+
+        elif line[0] == "Slot":
+            slot = int(line[-1])
+        elif line[0] == "Firmware" and line[1] == "state:":
+            state = line[2]
+        elif line[0] == "Inquiry" and line[1] == "Data:":
+            name = " ".join(line[2:])
+            #Adapter, Enclosure, Encolsure Device ID, Slot, State, Name
+            return_var.append((megaraid_pdisks_adapterstr[adapter],
+                               adapters[adapter][enclosure_devid],
+                               enclosure_devid, slot, state, name))
+
+    return return_var
+
+
+def inventory_megaraid_pdisks(info):
+
+    info = megaraid_pdisks_parse(info)
+    inventory = []
+    for adapter, enclosure, enc_dev_id, slot, state, name  in info:
+        inventory.append(("%s%s/%s" % (adapter, enclosure, slot), repr(state)))
+    return inventory
+
+def check_megaraid_pdisks(item, target_state, info):
+    info = megaraid_pdisks_parse(info)
+    for adapter, enclosure, enc_dev_id, slot, state, name in info:
+        if "%s%s/%s" % (adapter, enclosure, slot) == item:
+           infotext = "%s (%s)" % (state, name)
+           if state == target_state:
+               return (0, infotext)
+           else:
+               return (2, infotext)
+    return (3, "No disk in encl/slot %s found" % item)
+
+
+check_info["megaraid_pdisks"] = {
+    'check_function':          check_megaraid_pdisks,
+    'inventory_function':      inventory_megaraid_pdisks,
+    'service_description':     'RAID PDisk Adapt/Enc/Sl %s',
+    'has_perfdata':            True,
+    'group':                   'raid_disk',
+}

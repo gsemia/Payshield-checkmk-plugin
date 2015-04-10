@@ -1,0 +1,66 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<oracle_logswitches>>>
+# pengt  15
+# hirni  22
+
+oracle_logswitches_default_levels = (-1, -1, 50, 100)
+
+def inventory_oracle_logswitches(info):
+    return [ (line[0], "oracle_logswitches_default_levels") for line in info if len(line) >= 2 ]
+
+def check_oracle_logswitches(item, params, info):
+    for line in info:
+        if line[0] == item:
+            err = oracle_handle_ora_errors(line)
+            if err == False:
+                continue
+            elif isinstance(err, tuple):
+                return err
+
+            locrit, lowarn, warn, crit = params
+            logswitches = int(line[1])
+            infotext = "%d log switches in the last 60 minutes (levels at %d/%d .. %d/%d)" \
+                % (logswitches, locrit, lowarn, warn, crit)
+            perfdata = [("logswitches", logswitches, warn, crit)]
+            if logswitches >= crit or logswitches <= locrit:
+                return (2, infotext, perfdata)
+            elif logswitches >= warn or logswitches <= lowarn:
+                return (1, infotext, perfdata)
+            else:
+                return (0, infotext, perfdata)
+    return (3, "Database not existing or not running")
+
+check_includes['oracle_logswitches'] = [ "oracle.include" ]
+
+check_info["oracle_logswitches"] = {
+    'check_function':          check_oracle_logswitches,
+    'inventory_function':      inventory_oracle_logswitches,
+    'service_description':     'ORA %s Logswitches',
+    'has_perfdata':            True,
+    'group':                   'oracle_logswitches',
+}

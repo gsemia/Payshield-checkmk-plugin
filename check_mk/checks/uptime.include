@@ -1,0 +1,67 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# Example for params:
+# {
+#    "min" : ( 7200, 3600 ),            # Minimum required uptime (warn, crit)
+#    "max" : ( 86400 * 7, 86400 * 14),  # Maximum required uptime (warn, crit)
+# }
+
+def check_uptime_seconds(params, uptime):
+    seconds = uptime % 60
+    rem = uptime / 60
+    minutes = rem % 60
+    hours = (rem % 1440) / 60
+    days = rem / 1440
+    now = int(time.time())
+    since = time.strftime("%c", time.localtime(now - uptime))
+    state = 0
+    infotext = "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds)
+
+    if params == None: # legacy
+        params = {}
+
+    if "min" in params:
+        warn, crit = params["min"]
+        if uptime < crit:
+            state = 2
+        elif uptime < warn:
+            state = max(state, 1)
+        if state:
+            infotext += ", not up long enough!"
+
+    if "max" in params:
+        warn, crit = params["max"]
+        if uptime > crit:
+            state = 2
+        elif uptime > warn:
+            state = max(state, 1)
+        if uptime > warn:
+            infotext += ", up too long!"
+
+    return (state,  infotext, [ ("uptime", uptime) ])
+

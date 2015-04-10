@@ -1,0 +1,287 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def esx_vsphere_hostsystem_convert(info):
+    data = {}
+    for line in info:
+        data[line[0]] = line[1:]
+    return data
+
+
+#.
+#   .--CPU-----------------------------------------------------------------.
+#   |                           ____ ____  _   _                           |
+#   |                          / ___|  _ \| | | |                          |
+#   |                         | |   | |_) | | | |                          |
+#   |                         | |___|  __/| |_| |                          |
+#   |                          \____|_|    \___/                           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+esx_host_cpu_default_levels = {}
+
+# hardware.cpuInfo.numCpuCores 12
+# hardware.cpuInfo.numCpuPackages 2
+# hardware.cpuInfo.numCpuThreads 24
+# hardware.cpuInfo.hz 2933436846               --> In Hz per CPU Core
+# summary.quickStats.overallCpuUsage 7539      --> In MHz
+
+
+def inventory_esx_vsphere_hostsystem_cpu(info):
+    data = esx_vsphere_hostsystem_convert(info).keys()
+    if 'summary.quickStats.overallCpuUsage' in data \
+        and 'hardware.cpuInfo.hz' in data\
+        and 'hardware.cpuInfo.numCpuCores' in data:
+        return [(None, {})]
+
+def check_esx_vsphere_hostsystem_cpu(item, params, info):
+    data = esx_vsphere_hostsystem_convert(info)
+    num_sockets = int(data['hardware.cpuInfo.numCpuPackages'][0])
+    num_cores = int(data['hardware.cpuInfo.numCpuCores'][0])
+    num_threads = int(data['hardware.cpuInfo.numCpuThreads'][0])
+    used_mhz = float(data['summary.quickStats.overallCpuUsage'][0])
+    mhz_per_core = float(data['hardware.cpuInfo.hz'][0]) / 1024.0 / 1024.0
+    total_mhz = mhz_per_core * num_cores
+
+    usage = used_mhz / total_mhz * 100
+    per_core = num_cores / 100.0
+
+    infotext = "%.1f%%" % usage
+
+    # Convert legacy parameters
+    this_time = time.time()
+    state, infotext, perfdata = check_cpu_util(usage, params)
+
+    infotext += ", %.2fGHz/%.2fGHz" % (used_mhz / 1024.0, total_mhz / 1024.0)
+    infotext += ", %d sockets, %d cores/socket, %d threads" % (
+            num_sockets, num_cores / num_sockets, num_threads)
+
+    # put number of threads as MAX value for first perf-data. This
+    # is needed by the PNP template.
+    perfdata_cpu = list(perfdata[0])
+    perfdata_cpu[-1] = num_threads
+    perfdata = [ tuple(perfdata_cpu) ] + perfdata[1:]
+    return (state, infotext, perfdata)
+
+
+check_info['esx_vsphere_hostsystem.cpu_usage'] = {
+   "inventory_function"      : inventory_esx_vsphere_hostsystem_cpu,
+   "check_function"          : check_esx_vsphere_hostsystem_cpu,
+   "service_description"     : "CPU utilization",
+   "group"                   : "cpu_utilization_os",
+   "has_perfdata"            : True,
+   "default_levels_variable" : "esx_host_cpu_default_levels",
+   "includes"                : [ "cpu_util.include" ],
+}
+
+
+#.
+#   .--Memory--------------------------------------------------------------.
+#   |               __  __                                                 |
+#   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
+#   |              | |\/| |/ _ \ '_ ` _ \ / _ \| '__| | | |                |
+#   |              | |  | |  __/ | | | | | (_) | |  | |_| |                |
+#   |              |_|  |_|\___|_| |_| |_|\___/|_|   \__, |                |
+#   |                                                |___/                 |
+#   +----------------------------------------------------------------------+
+
+
+esx_host_mem_default_levels = ( 80.0, 90.0 )
+
+def inventory_esx_vsphere_hostsystem_mem(info):
+    data = esx_vsphere_hostsystem_convert(info).keys()
+    if 'summary.quickStats.overallMemoryUsage' in data and 'hardware.memorySize' in data:
+        return [(None, 'esx_host_mem_default_levels')]
+
+def check_esx_vsphere_hostsystem_mem(item, params, info):
+    data = esx_vsphere_hostsystem_convert(info)
+    memory_usage = savefloat(data['summary.quickStats.overallMemoryUsage'][0]) * 1024 * 1024
+    memory_size  = savefloat(data['hardware.memorySize'][0])
+    level = memory_usage / memory_size * 100
+
+    warn, crit = params
+    state = 0
+    label = ''
+    if level > crit:
+        state = 2
+        label = " (Levels at %d%%/%d%%)" % (warn, crit)
+    elif level > warn:
+        state = 1
+        label = " (Levels at %d%%/%d%%)" % (warn, crit)
+
+    message = "%d%%%s used - %s/%s" % \
+    (level, label, get_bytes_human_readable(memory_usage), get_bytes_human_readable(memory_size))
+    perf = [("usage", memory_usage, warn * memory_size / 100, crit * memory_size / 100, 0, memory_size)]
+    return(state, message, perf)
+
+
+check_info['esx_vsphere_hostsystem.mem_usage'] = {
+  "inventory_function"  : inventory_esx_vsphere_hostsystem_mem,
+  "check_function"      : check_esx_vsphere_hostsystem_mem,
+  "service_description" : "Memory used",
+  "group"               : "esx_host_memory",
+  "has_perfdata"        : True
+}
+
+#.
+#   .--State---------------------------------------------------------------.
+#   |                       ____  _        _                               |
+#   |                      / ___|| |_ __ _| |_ ___                         |
+#   |                      \___ \| __/ _` | __/ _ \                        |
+#   |                       ___) | || (_| | ||  __/                        |
+#   |                      |____/ \__\__,_|\__\___|                        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+
+def inventory_esx_vsphere_hostsystem_state(info):
+    data = esx_vsphere_hostsystem_convert(info).keys()
+    if 'runtime.inMaintenanceMode' in data:
+        return [(None, None)]
+
+def check_esx_vsphere_hostsystem_state(item, params, info):
+    data = esx_vsphere_hostsystem_convert(info)
+    state = 0
+    label = {}
+    messages = []
+    label['Status'] = ""
+    overallStatus = str(data['overallStatus'][0])
+    if overallStatus == "yellow":
+        state = 1
+        label['Status'] = "(!)"
+    elif overallStatus in [ "red", "gray"]:
+        state = 2
+        label['Satus'] = "(!!)"
+    messages.append("Entity state: %s%s" % (overallStatus, label['Status']))
+
+    label['powerState'] = ''
+    powerState = str(data['runtime.powerState'][0])
+    if powerState in ['poweredOff', 'unknown']:
+        state = 2
+        label['powerState'] = "(!!)"
+    elif powerState == 'standBy':
+        state = max(state, 1)
+        label['powerState'] = "(!)"
+    messages.append("Power state: %s%s" % (powerState, label['powerState']))
+
+    if str(data['runtime.inMaintenanceMode'][0]) == 'True':
+        messages.append("System is in maintenance(!!)")
+
+    return(state, ", ".join(messages))
+
+check_info['esx_vsphere_hostsystem.state'] = {
+  "inventory_function"  : inventory_esx_vsphere_hostsystem_state,
+  "check_function"      : check_esx_vsphere_hostsystem_state,
+  "service_description" : "Overall state",
+}
+
+
+#.
+#   .--Multipath-----------------------------------------------------------.
+#   |             __  __       _ _   _             _   _                   |
+#   |            |  \/  |_   _| | |_(_)_ __   __ _| |_| |__                |
+#   |            | |\/| | | | | | __| | '_ \ / _` | __| '_ \               |
+#   |            | |  | | |_| | | |_| | |_) | (_| | |_| | | |              |
+#   |            |_|  |_|\__,_|_|\__|_| .__/ \__,_|\__|_| |_|              |
+#   |                                 |_|                                  |
+#   +----------------------------------------------------------------------+
+
+
+def esx_vsphere_multipath_convert(info):
+    data = esx_vsphere_hostsystem_convert(info)
+    data = data['config.multipathState.path']
+    data = zip(data[::2], data[1::2])
+    paths = {}
+    for path, state in data:
+        path_type, path_id = path.split('-')[-1].split('.')
+        if path_type in ['naa', 'eui']:
+            hw_type = path.split('.')[0]
+            if hw_type != 'unknown':
+                paths.setdefault(path_id, [])
+                paths[path_id].append((state, "%s/%s" % (path_type, hw_type)))
+    return paths
+
+def inventory_esx_vsphere_hostsystem_multipath(info):
+    data = esx_vsphere_multipath_convert(info).items()
+    return [ (x, None) for x, y  in data]
+
+def check_esx_vsphere_hostsystem_multipath(item, params, info):
+    state_infos = {
+        # alert_state, count, info
+        "active"   : [0, 0, ""],
+        "dead"     : [2, 0, ""],
+        "disabled" : [1, 0, ""],
+        "standby"  : [0, 0, ""],
+        "unknown"  : [2, 0, ""]
+    }
+
+    state   = 0
+    message = ""
+
+    for path, states in esx_vsphere_multipath_convert(info).items():
+        if path == item:
+            # Collect states
+            for path_state, path_type in states:
+                state_item = state_infos.get(path_state)
+                if state_item:
+                    state_item[1] += 1
+                    state = max(state_item[0], state)
+
+            # Check warn, critical
+            if not params or type(params) == list:
+                if state_infos["standby"][1] > 0 and \
+                   state_infos["standby"][1] != state_infos["active"][1]:
+                    standby_label = "(!)"
+                    state = max(state_infos["standby"][1], state)
+            else:
+                state = 0
+                for state_name, state_values in state_infos.items():
+                    if params.get(state_name):
+                        warn, crit = params.get(state_name)
+                        count = state_values[1]
+                        if count > crit:
+                            state = 2
+                            state_values[2] = "(!!)"
+                        elif count > warn:
+                            state = max(state, 1)
+                            state_values[2] = "(!)"
+            # Output message
+            message = "Type %s" % path_type
+            for element in "active", "dead", "disabled", "standby", "unknown":
+                message += ", %d %s%s" % ( state_infos[element][1], element, state_infos[element][2] )
+            break
+    else:
+        return 3, "Path not found in agent output"
+
+    return (state, message)
+
+check_info['esx_vsphere_hostsystem.multipath'] = {
+  "inventory_function"  : inventory_esx_vsphere_hostsystem_multipath,
+  "check_function"      : check_esx_vsphere_hostsystem_multipath,
+  "service_description" : "Multipath %s",
+  "group"               : "multipath_count"
+}
+

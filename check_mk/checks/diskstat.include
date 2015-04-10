@@ -1,0 +1,242 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+diskstat_inventory_mode = "rule" # "summary", "single", "legacy"
+
+diskstat_default_levels = {
+#    "read" :    (10, 20),   # MB/sec
+#    "write" :   (20, 40),   # MB/sec
+#    "average" : 15,         # min
+#    "latency" : (10, 20),   # ms
+#    "latency_perfdata" : True,
+}
+
+# Rule for controlling diskstat inventory more fine grained
+diskstat_inventory = []
+
+# Example
+# diskstat_inventory = [
+#  ( [], [ 'linux' ], ALL_HOST ), --> No diskstat on this host
+#  ( [ 'summary', 'physical', 'lvm', 'vxvm' ], ALL_HOSTS ),
+# ]
+
+def inventory_diskstat_generic(info):
+    # Skip over on empty data
+    if not info:
+        return
+
+    # New style: use rule based configuration, defaulting to summary mode
+    if diskstat_inventory_mode == "rule":
+        hits = host_extra_conf(g_hostname, diskstat_inventory)
+        if len(hits) > 0:
+            modes = hits[0]
+        else:
+            modes = [ "summary" ]
+
+    elif diskstat_inventory_mode == "single":
+        modes = [ "physical" ]
+    elif diskstat_inventory_mode == "summary":
+        modes = [ "summary" ]
+    else:
+        modes = [ "legacy" ]
+
+    inventory = []
+    if "summary" in modes:
+        inventory.append( ( "SUMMARY", "diskstat_default_levels" ) )
+
+    if "legacy" in modes:
+        inventory += [ ( "read", None ), ( "write", None ) ]
+
+    if "physical" in modes:
+        inventory += [ (line[0], "diskstat_default_levels")
+                       for line in info
+                       if not ' ' in line[0] ]
+
+    if "lvm" in modes:
+        inventory += [ (line[0], "diskstat_default_levels")
+                       for line in info
+                       if line[0].startswith("LVM ") ]
+
+    if "vxvm" in modes:
+        inventory += [ (line[0], "diskstat_default_levels")
+                       for line in info
+                       if line[0].startswith("VxVM ") ]
+
+    return inventory
+
+
+
+def check_diskstat_line(this_time, item, params, line):
+    average_range = params.get("average")
+    perfdata = []
+    infos = []
+    status = 0
+    prediction_perf = []
+    for what, ctr in [ ("read",  line[1]), ("write", line[2]) ]:
+        countername = "diskstat.%s.%s" % (item, what)
+
+        # unpack levels now, need also for perfdata
+        levels = params.get(what)
+        if type(levels) == tuple:
+            warn, crit = levels
+        else:
+            warn, crit = None, None
+
+        # compute IO rate in bytes/sec
+        timedif, sectors_per_sec = get_counter(countername, this_time, int(ctr))
+        bytes_per_sec = sectors_per_sec * 512
+        infos.append("%s/sec %s" % (get_bytes_human_readable(bytes_per_sec), what))
+        perfdata.append( (what, bytes_per_sec, warn, crit) )
+        dsname = what
+
+        # compute average of the rate over ___ minutes
+        if average_range != None:
+            timedif, avg = get_average(countername + ".avg", this_time, bytes_per_sec, average_range)
+            dsname = what + ".avg"
+            perfdata.append( (dsname, avg) )
+            bytes_per_sec = avg
+
+        # check levels
+        state, text, extraperf = check_levels(bytes_per_sec, dsname, levels,
+                                              unit = "MB/s", factor = 1048576, statemarkers=True)
+        if text:
+            infos.append(text)
+        status = max(state, status)
+        prediction_perf += extraperf
+
+    # Add performance data for averaged IO
+    if average_range != None:
+        perfdata = [ perfdata[0], perfdata[2], perfdata[1], perfdata[3] ]
+
+    # Process IOs when available
+    ios_per_sec = None
+    if len(line) >= 5 and line[3] >= 0 and line[4] > 0:
+        reads, writes = map(int, line[3:5])
+        ios = reads + writes
+        timedif, ios_per_sec = get_counter(countername + ".ios", this_time, ios)
+        infos.append("IOs: %.2f/sec" % ios_per_sec)
+
+        if params.get("latency_perfdata"):
+            perfdata.append(("ios", ios_per_sec))
+
+    # Do Latency computation if this information is available:
+    if len(line) >= 6 and line[5] >= 0:
+        timems = int(line[5])
+        timedif, timems_per_sec = get_counter(countername + ".time", this_time, timems)
+        if not ios_per_sec:
+            latency = 0.0
+        else:
+            latency = timems_per_sec / ios_per_sec
+        infos.append("Latency: %.2fms" % latency)
+        if "latency" in params:
+            warn, crit = params["latency"]
+            if latency >= crit:
+                status = 2
+                infos[-1] += "(!!)"
+            elif latency >= warn:
+                status = max(status, 1)
+                infos[-1] += "(!)"
+        else:
+            warn, crit = None, None
+
+        if params.get("latency_perfdata"):
+            perfdata.append(("latency", latency, warn, crit))
+
+    # Queue Lengths (currently only Windows). Windows uses counters here.
+    # I have not understood, why....
+    if len(line) >= 8:
+        for what, ctr in [ ("read",  line[6]), ("write", line[7]) ]:
+            countername = "diskstat.%s.ql.%s" % (item, what)
+            levels = params.get(what + "_ql")
+            if levels:
+                warn, crit = levels
+            else:
+                warn, crit = None, None
+
+            timedif, qlx = get_counter(countername, this_time, int(ctr))
+            ql = qlx / 10000000.0
+            infos.append(what.title() + " Queue: %.2f" % ql)
+
+            # check levels
+            if levels != None:
+                if ql >= crit:
+                    status = 2
+                    infos[-1] += "(!!)"
+                elif ql >= warn:
+                    status = max(status, 1)
+                    infos[-1] += "(!)"
+
+            if params.get("ql_perfdata"):
+                perfdata.append((what + "_ql", ql))
+
+    perfdata += prediction_perf
+
+    return (status, ", ".join(infos) , perfdata)
+
+
+def check_diskstat_generic(item, params, this_time, info):
+    # legacy version if item is "read" or "write"
+    if item in [ 'read', 'write' ]:
+        return check_diskstat_old(item, params, this_time, info)
+
+    # summary mode
+    if item == 'SUMMARY': # summary mode (only summarize physical disks!)
+        summary_line = [0] * 13
+        if len(info) == 0:
+            return 3, "No performance information about any disk found"
+        for line in info:
+            devname = line[0]
+            if ' ' in devname:
+                continue
+            summary_line = map(lambda e: e[0] + int(e[1]), zip(summary_line, line[1:]))
+        return check_diskstat_line(this_time, "SUMMARY", params, [''] + summary_line)
+
+    # single mode
+    for line in info:
+        if line[0] == item:
+            return check_diskstat_line(this_time, item, params, line)
+
+    return (3, "device missing")
+
+
+# This is the legacy version of diskstat as used in <= 1.1.10.
+# We keep it here for a while in order to be compatible with
+# old installations.
+def check_diskstat_old(item, params, this_time, info):
+    # sum up over all devices
+    if item == 'read':
+        index = 1 # sectors read
+    elif item == 'write':
+        index = 2 # sectors written
+    else:
+        return (3, "invalid item %s" % (item,))
+
+    this_val  = sum([int(x[index]) for x in info if ' ' not in x[0]])
+
+    timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
+    mb_per_s = per_sec / 2048.0    # Diskstat output is in sectors a 512 Byte
+    perfdata = [ (item, "%dc" % this_val ) ]
+    return (0, "%.1fMB/s (in last %d secs)" % (mb_per_s, timedif), perfdata)

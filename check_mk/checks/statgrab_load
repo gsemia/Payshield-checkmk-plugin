@@ -1,0 +1,52 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+cpuload_default_levels = (5, 10)
+
+def inventory_statgrab_load(info):
+    return [(None, 'cpuload_default_levels')]
+
+def check_statgrab_load(item, params, info):
+    load = [0.0, 0.0, 0.0]
+    for var, value in info:
+        if var == 'min1':
+            load[0] = float(value)
+        elif var == 'min5':
+            load[1] = float(value)
+        else:
+            load[2] = float(value)
+
+    return check_cpu_load_generic(params, load)
+
+
+check_info["statgrab_load"] = {
+    'check_function':          check_statgrab_load,
+    'inventory_function':      inventory_statgrab_load,
+    'service_description':     'CPU load',
+    'has_perfdata':            True,
+    'group':                   'cpu_load',
+    "includes":                ["cpu_load.include"],
+}

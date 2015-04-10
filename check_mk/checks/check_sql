@@ -1,0 +1,74 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#active_checks['sql'] = [
+#  ( {'dbms': 'postgres', 'description': u'SQL Test', 'user': 'golla', 'sql': 'testerer', 'password': 'toor', 'procedure': {'useprocs': True, 'input': '1223,456'}, 'name': 'messpc'}, [], ALL_HOSTS ),
+#  ] + active_checks['sql']
+
+def check_sql_arguments(params):
+    args  = " --hostname '$HOSTADDRESS$'"
+    args += " --dbms %s" % quote_shell_string(params["dbms"])
+    args += " --name %s" % quote_shell_string(params["name"])
+    args += " --user '%s'" % params["user"]
+    args += " --password '%s'" % params["password"]
+
+    if "port" in params:
+        args += " --port %s" % params["port"]
+
+    if "procedure" in params:
+        if "procedure" in params and "useprocs" in params["procedure"]:
+            args += " --procedure"
+            if "input" in params["procedure"]:
+                args += " --inputvars %s" \
+                    % quote_shell_string(params["procedure"]["input"])
+
+    if "levels" in params:
+        upper = params["levels"]
+    else:
+        upper = "", ""
+
+    if "levels_low" in params:
+        lower = params["levels_low"]
+    else:
+        lower = "", ""
+
+    if "levels" in params or "levels_low" in params:
+        args += " -w %s:%s" % (lower[0], upper[0])
+        args += " -c %s:%s" % (lower[1], upper[1])
+
+    sql_tmp = params["sql"].replace("\n", r"\n").replace(";", "\;")
+    args += " %s" % quote_shell_string(sql_tmp)
+
+    return args
+
+
+active_check_info['sql'] = {
+    "command_line"        : '$USER1$/check_sql $ARG1$',
+    "argument_function"   : check_sql_arguments,
+    "service_description" : lambda args: args["description"],
+    "has_perfdata"        : True,
+}
+

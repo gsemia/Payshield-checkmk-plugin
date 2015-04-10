@@ -1,0 +1,84 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<3ware_units>>>
+# u0    RAID-5    OK             -       -       64K     1788.08   ON     OFF
+# u1    RAID-5    INOPERABLE     -       -       64K     1788.08   OFF    OFF
+
+# Different versions of tw_cli have different outputs. This means the size column
+# used by this check is in different places. Here is a an example:
+#
+# Unit  UnitType  Status         %Cmpl  Stripe  Size(GB)  Cache  AVerify IgnECC
+# u0    RAID-5    INITIALIZING   84     64K     1396.95   ON     ON      OFF
+#
+# Unit  UnitType  Status         %RCmpl  %V/I/M  Stripe  Size(GB)  Cache  AVrfy
+# u0    RAID-5    OK             -       -       64K     1396.95   ON     ON
+
+# inventory
+def inventory_3ware_units(info):
+    inventory = []
+    for line in info:
+        unit = line[0]
+        inventory.append( (unit, None) )
+    return inventory
+
+# check
+def check_3ware_units(item, _no_params, info):
+    for line in info:
+        if line[0] == item:
+            unit_type = line[1]
+            status    = line[2]
+            complete  = line[3]
+
+            # Handle different outputs of tw_cli
+            try:
+                size = float(line[6])
+            except ValueError:
+                size = float(line[5])
+
+            complete_txt = ''
+            if complete != '-':
+                complete_txt = ' complete: %s%%' % complete
+
+            infotext = "%s (type: %s, size: %sGB%s)" % (status, unit_type, size, complete_txt)
+
+            if status in [ "OK", "VERIFYING" ]:
+                return (0, "unit status is " + infotext)
+            elif status in [ "INITIALIZING", "VERIFY-PAUSED", "REBUILDING" ]:
+                return (1, "unit status is " + infotext)
+            else:
+                return (2, "unit status is " + infotext)
+    return (3, "unit %s not found in agent output" % item)
+
+# declare the check to Check_MK
+
+check_info["3ware_units"] = {
+    'check_function':          check_3ware_units,
+    'inventory_function':      inventory_3ware_units,
+    'service_description':     'RAID 3ware unit %s',
+    'group':                   'raid',
+}

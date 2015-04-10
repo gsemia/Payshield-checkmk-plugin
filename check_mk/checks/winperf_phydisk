@@ -1,0 +1,105 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent
+# <<<winperf_phydisk>>>
+# 1352457622.31 234
+# 2 instances: 0_C: _Total
+# -36 0 0 rawcount
+# -34 235822560 235822560 type(20570500)
+# -34 2664021277 2664021277 type(40030500)
+# 1166 235822560 235822560 type(550500)        ----> Average Disk Queue Length
+# -32 109877176 109877176 type(20570500)
+# -32 2664021277 2664021277 type(40030500)
+# 1168 109877176 109877176 type(550500)        ----> Average Disk Read Queue Length
+# -30 125945384 125945384 type(20570500)
+# -30 2664021277 2664021277 type(40030500)
+# 1170 125945384 125945384 type(550500)        ----> Average Disk Write Queue Length
+# -28 3526915777 3526915777 average_timer
+# -28 36283 36283 average_base
+# -26 1888588843 1888588843 average_timer
+# -26 17835 17835 average_base
+# -24 1638326933 1638326933 average_timer
+# -24 18448 18448 average_base
+# -22 36283 36283 counter
+# -20 17835 17835 counter                     ----> Disk Reads/sec
+# -18 18448 18448 counter                     ----> Disk Writes/sec
+# -16 1315437056 1315437056 bulk_count
+# -14 672711680 672711680 bulk_count          ----> Disk Read Bytes/sec
+# -12 642725376 642725376 bulk_count          ----> Disk Write Bytes/sec
+# -10 1315437056 1315437056 average_bulk
+# -10 36283 36283 average_base
+# -8 672711680 672711680 average_bulk
+# -8 17835 17835 average_base
+# -6 642725376 642725376 average_bulk
+# -6 18448 18448 average_base
+# 1248 769129229 769129229 type(20570500)
+# 1248 2664021277 2664021277 type(40030500)
+# 1250 1330 1330 counter
+
+check_includes['winperf_phydisk'] = [ "diskstat.include" ]
+
+def winperf_phydisk_convert(info):
+    # In case disk performance counters are not enabled, the agent sends
+    # an almost empty section, where the second line is missing completely
+    if len(info) == 1:
+        return []
+    disks = [ d.split('_')[-1] for d in info[1][2:-1] ]
+    for line in info[2:]:
+        if line[0] == '-14':
+            disk_read_bytes  = [ int(x) / 512 for x in line[1:-2] ]
+        elif line[0] == '-12':
+            disk_write_bytes = [ int(x) / 512 for x in line[1:-2] ]
+        elif line[0] == '-20':
+            disk_reads       = [ int(x) for x in line[1:-2] ]
+        elif line[0] == '-18':
+            disk_writes      = [ int(x) for x in line[1:-2] ]
+        elif line[0] == '1168': # Average Disk Read Queue Length
+            disk_readq_ctrs  = [ int(x) for x in line[1:-2] ]
+        elif line[0] == '1170': # Average Disk Read Queue Length
+            disk_writeq_ctrs = [ int(x) for x in line[1:-2] ]
+
+    # Missing columns are donted by negative values (Linux sends here latency
+    # information)
+    empty = [ -1 for x in disks ]
+
+    return zip(disks, disk_read_bytes, disk_write_bytes, disk_reads, disk_writes, empty, disk_readq_ctrs, disk_writeq_ctrs)
+
+def inventory_winperf_phydisk(info):
+    return inventory_diskstat_generic(winperf_phydisk_convert(info))
+
+def check_winperf_phydisk(item, params, info):
+    this_time = int(float(info[0][0]))
+    return check_diskstat_generic(item, params, this_time, winperf_phydisk_convert(info))
+
+
+check_info["winperf_phydisk"] = {
+    'check_function':          check_winperf_phydisk,
+    'inventory_function':      inventory_winperf_phydisk,
+    'service_description':     'Disk IO %s',
+    'has_perfdata':            True,
+    'group':                   'disk_io',
+}

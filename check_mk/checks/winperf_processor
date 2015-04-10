@@ -1,0 +1,87 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+winperf_cpu_default_levels = { "levels": ( 101.0, 101.0 ) }
+
+def inventory_winperf_util(info):
+    if len(info) <= 1:
+        return None
+
+    for line in info[1:]:
+        try:
+            if line[0] == '-232':
+                return [(None, "winperf_cpu_default_levels")]
+        except:
+            pass
+
+
+# params: levels for warn / crit in percentage
+def check_winperf_util(_no_item, params, info):
+    if not info:
+        return 3, "Got no information from agent"
+    this_time = int(float(info[0][0]))
+
+    for line in info[1:]:
+        if line[0] == '-232':
+            # Windows sends one counter for each CPU plus one counter that
+            # sums up to total (called _Total). We only need that last value.
+            ticks = int(line[-2])
+            num_cpus = len(line) - 3
+            timedif, ticks_per_sec = get_counter("winperf_util", this_time, ticks)
+            # We get the value of the PERF_100NSEC_TIMER_INV here.
+            # This counter type shows the average percentage of active time observed
+            # during the sample interval. This is an inverse counter. Counters of this
+            # type calculate active time by measuring the time that the service was
+            # inactive and then subtracting the percentage of active time from 100 percent.
+            #
+            # 1 tick = 100ns, convert to seconds
+            cpusecs_per_sec = ticks_per_sec / 10000000.0
+            used_perc = 100.0 * (1 - cpusecs_per_sec)
+
+            # Due to timeing invariancies the measured level can become > 100%.
+            # This makes users unhappy, so cut it off.
+            if used_perc < 0:
+                used_perc = 0
+            elif used_perc > 100:
+                used_perc = 100
+
+            state, infotext, perfdata = check_cpu_util(used_perc, params, this_time)
+            perfdata[0] = perfdata[0][:5] + (num_cpus,)
+            infotext += ", %d CPUs" % num_cpus
+            return state, infotext, perfdata
+
+    return (3, "counter for CPU (6) not found")
+
+
+check_info["winperf_processor.util"] = {
+    'check_function':          check_winperf_util,
+    'inventory_function':      inventory_winperf_util,
+    'service_description':     'CPU utilization',
+    'has_perfdata':            True,
+    'group':                   'cpu_utilization_os',
+    'includes':                [ "cpu_util.include" ],
+}
