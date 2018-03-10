@@ -1,0 +1,62 @@
+#!/usr/bin/python
+
+# OIDs used:
+# THALES-PAYSHIELD::ps9000UtilLoad.0                 .1.3.6.1.4.1.4096.2.2.9000.2.1.0
+# THALES-PAYSHIELD::ps9000UtilHostCmdVolume.0        .1.3.6.1.4.1.4096.2.2.9000.2.2.0 example: 60,4\nLQ,00012;M0,00004;M2,00004;N0,00039;
+# 
+# Scan function looks for THALES-PAYSHIELD::ps9000UtillEnabled.0 (.1.3.6.1.4.1.4096.2.2.9000.2.3.0) and checks if it is 1
+
+# Author: Rolf Koch - rolf.koch@netcetera.com - http://netcetera.com
+
+monitoredcommands = {"LQ", "M0", "M2", "N0", "RY"}
+
+def inventory_payshield_utilisation(info):
+    yield 'Payshield Utilisation Load', None
+    yield 'Payshield Total usage', None
+    for command in monitoredcommands:
+        yield 'Payshield %s usage' % command , None
+
+
+def check_payshield_utilisation(item, _no_params, info):
+    for index, value in enumerate(info[0]):
+        load, hostcmdvolume = value
+	if 'Payshield Utilisation Load' in item:
+	    return (0, "Current Utilisation Load is %s" % load)
+	lines = value[1].split('\n')
+        frequency, utilisation = lines[0].split(',')
+        if 'Payshield Total usage' in item:
+            return (0, "Total command usage is %d" % int(utilisation), [ ( "usage", int(utilisation)), ] )
+        for monitoredcmd in monitoredcommands:
+            if monitoredcmd in item:
+                if len(lines) == 1:  
+                    return (0, 'not used in last %s Seconds' % frequency , [ ("%s" % monitoredcmd, 0), ])
+                elif lines[1].find(monitoredcmd) == -1 :
+                    return (0, 'not used in last %s Seconds' % frequency , [ ("%s" % monitoredcmd, 0), ])
+
+        
+        if len(lines) > 1 and len(lines[1].split(";")) > 1:
+            for commands in lines[1].split(";"):
+               if len(commands.split(',')) > 1:
+                   cmd, volume = commands.split(',')
+                   if 'Payshield %s usage' % cmd == item:
+                       commanddictionary = { "LQ": "LQ stuff", "M0": "M0 encrypt", "M2": "M2 encrypt", "N0": "N0 Decrypt"}
+                       return (0, 'the command %s was used %d times in last %s Seconds' % (cmd, int(volume), frequency), [ ("%s" % cmd, int(volume)), ])
+        else:
+	    if 'usage' in item:
+   	        return (0, 'not used in last %s Seconds' % frequency)
+            else:
+                return (3, "unknown situation with %s" % lines)
+
+
+check_info["payshield_utilisation"] = {
+    "check_function"        : check_payshield_utilisation,
+    "inventory_function"    : inventory_payshield_utilisation,
+    "service_description"   : "%s",
+    "has_perfdata"          : True,
+    "snmp_scan_function"    : lambda oid:  oid(".1.3.6.1.4.1.4096.2.2.9000.2.3.0") is 1 ,
+    "snmp_info"             : [( ".1.3.6.1.4.1.4096.2.2.9000.2", [
+                                  "1.0",   # ps9000UtilLoad.0
+                                  "2.0",   # ps9000UtilHostCmdVolume.0
+                              ])],
+}
+

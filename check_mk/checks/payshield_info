@@ -1,0 +1,62 @@
+#!/usr/bin/python
+
+# OIDs used:
+# THALES-PAYSHIELD::ps9000SystemSerialNum.0             		.1.3.6.1.4.1.4096.2.2.9000.6.2.0
+# THALES-PAYSHIELD::ps9000VersionSoftwareBaseRelease.0			.1.3.6.1.4.1.4096.2.2.9000.8.1.0
+# THALES-PAYSHIELD::ps9000VersionSoftwareRevision.0			.1.3.6.1.4.1.4096.2.2.9000.8.2.0
+# THALES-PAYSHIELD::ps9000VersionSoftwareBuildNumber.0			.1.3.6.1.4.1.4096.2.2.9000.8.3.0
+# THALES-PAYSHIELD::ps9000VersionSoftwareHSMCoreAPIVersion.0 		.1.3.6.1.4.1.4096.2.2.9000.8.4.0
+# THALES-PAYSHIELD::ps9000LicensingPerformanceModel.0			.1.3.6.1.4.1.4096.2.2.9000.9.1.0
+# THALES-PAYSHIELD::ps9000LicensingOptionalLicenseCount.0 		.1.3.6.1.4.1.4096.2.2.9000.9.2.0
+# THALES-PAYSHIELD::ps9000LicensingOptionalLicensesList.0 		.1.3.6.1.4.1.4096.2.2.9000.9.3.0
+# THALES-PAYSHIELD::ps9000LicensingCryptoAlgorithmCount.0 		.1.3.6.1.4.1.4096.2.2.9000.9.4.0
+# THALES-PAYSHIELD::ps9000LicensingCryptoAlgorithmList.0		.1.3.6.1.4.1.4096.2.2.9000.9.5.0
+# THALES-PAYSHIELD::ps9000EnabledHostCommandsCount.0			.1.3.6.1.4.1.4096.2.2.9000.10.1.0
+# THALES-PAYSHIELD::ps9000EnabledHostCommandsList.0			.1.3.6.1.4.1.4096.2.2.9000.10.2.0
+# THALES-PAYSHIELD::ps9000SettingsPCICompliant.0 			.1.3.6.1.4.1.4096.2.2.9000.16.1.0
+#
+# Scan function looks for Enterprise 'THALES-PAYSHIELD' OID and if it exists we continue
+
+# Author: Rolf Koch - rolf.koch@netcetera.com - http://netcetera.com
+
+def inventory_payshield_info(info):
+    yield 'Payshield Info', None
+   
+
+
+def check_payshield_info(item, _no_params, info):
+#    print info
+    for index, value  in enumerate(info[0]):
+#        print index
+        serial, versionbaserelease, versionrevision, versionbuild, versioncoreapi, licenseperformance, licenseoptionallicensecount, licenseoptionallicenselist, licensealgorithmcount, licensealgorithmlist, hostcommandcount, hostcommandlist, pcicompliant = value
+#        print statuscomment
+        if 'Payshield Info'  in item:
+            #scheme = {"1" : "Unknown", "2" : "Variant", "3" : "Keyblock", "4": "Aes"}
+            #algorithm = {"1" : "Unknown", "2": "3Des2Key", "3": "3Des3Key", "4": "Aes256"}
+            #livetest = { "1" : "lmkStatusUnknown", "2" : "Live", "3": "Test" }
+            pcicompliance = { "1" : "Yes", "2" : "No" }
+            return (0, "Payshield Info: %s \n System Serial Number: %s \nVersion Software Base Release: %s\nVersion Software Revision %s\nVersion Software Build Number: %s\nVersion Software HSM Core API Version: %s \nLicensing Performance Model: %s\nLicensing Optional License Count: %s\nLicensing Optional Licenses List: %s\nLicensing Crypto Algorithm Count: %s\nLicensing Crypto Algorithm List: %s\nEnabled Host Commands Count: %s\nEnabled Host Commands List: %s\nSettings PCI Compliant: %s" % (serial, serial, versionbaserelease, versionrevision, versionbuild, versioncoreapi, licenseperformance, licenseoptionallicensecount, licenseoptionallicenselist, licensealgorithmcount, licensealgorithmlist, hostcommandcount, hostcommandlist, pcicompliance[pcicompliant] ) )
+
+
+check_info["payshield_info"] = {
+    "check_function"        : check_payshield_info,
+    "inventory_function"    : inventory_payshield_info,
+    "service_description"   : "%s",
+    "has_perfdata"          : False,
+    "snmp_scan_function"    : lambda oid:  oid(".1.3.6.1.4.1.4096") != None ,
+    "snmp_info"             : [( ".1.3.6.1.4.1.4096.2.2.9000", [
+                                  "6.2.0",   # ps9000SystemSerialNum.0
+                                  "8.1.0",   # ps9000VersionSoftwareBaseRelease.0
+                                  "8.2.0",   # ps9000VersionSoftwareRevision.0
+                                  "8.3.0",   # ps9000VersionSoftwareBuildNumber.0
+                                  "8.4.0",   # ps9000VersionSoftwareHSMCoreAPIVersion.0
+                                  "9.1.0",   # ps9000LicensingPerformanceModel.0
+                                  "9.2.0",   # ps9000LicensingOptionalLicenseCount.0
+                                  "9.3.0",   # ps9000LicensingOptionalLicensesList.0
+                                  "9.4.0",   # ps9000LicensingCryptoAlgorithmCount.0
+                                  "9.5.0",   # ps9000LicensingCryptoAlgorithmList.0
+                                  "10.1.0",  # ps9000EnabledHostCommandsCount.0
+				  "10.2.0",  # ps9000EnabledHostCommandsList.0
+			          "16.1.0",  # ps9000SettingsPCICompliant.0
+                              ])],
+}
