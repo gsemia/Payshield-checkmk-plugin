@@ -8,24 +8,35 @@
 
 # Author: Rolf Koch - rolf.koch@netcetera.com - http://netcetera.com
 
-monitoredcommands = {"LQ", "M0", "M2", "N0", "RY"}
+monitoredcommands = {"A0", "A6", "A8", "CW", "EI", "EO", "EY", "GI", "IO", "IU", "IW", "IQ", "IY", "JE", "LQ", "M0", "M2", "M4", "N0", "RY"}
+
+commanddictionary = { "A0": "Generate Key", "A6": "Import a Key", "A8": "Export a Key", "CW": "Generate a Card Verification Code/Value", "EI": "Generate a Public/Private Key Pair", "EO": "Import a Public Key", "EY": "Validate an RSA Signature", "GI": "Import Key or data under an RSA Public Key", "IO": "Generate Remote Management Session ID and Session Keys", "IU": "Generate Remote Management Secure Message", "IW": "Validate and REcover Remote Management Secure Message", "IQ": "Validate Authentication Code", "IY": "Generate Digitised Card Single Use Keys", "JE": "Translate a PIN from ZPK to LMK Encryption", "LQ": "Generate an HMAC on a Block of Data", "M0": "Encrypt Data Block", "M2": "Decrypt Data Block", "M4": "Translate Data Block","N0": "Generate a Random Value", "RY": "Generate an AMEX Card Verification Code/Value"}
 
 def inventory_payshield_utilisation(info):
     yield 'Payshield Utilisation Load', None
-    yield 'Payshield Total usage', None
+    yield 'Payshield usage Total', None
+    yield 'Payshield HostCmdVolume', None
     for command in monitoredcommands:
-        yield 'Payshield %s usage' % command , None
+        yield 'Payshield usage %s' % command , None
 
 
 def check_payshield_utilisation(item, _no_params, info):
     for index, value in enumerate(info[0]):
         load, hostcmdvolume = value
 	if 'Payshield Utilisation Load' in item:
-	    return (0, "Current Utilisation Load is %s" % load)
+            if int(load) >= 90:
+     	        return (2, "High usage above 90!! Current Utilisation Load is %s" % load, [ ( "load", int(load)), ] )
+            if int(load) >= 75:
+                return (1, "Usage above 75!! Current Utilisation Load is %s" % load, [ ( "load", int(load)), ] )
+            else:
+                return (0, "Current Utilisation Load is %s" % load, [ ( "load", int(load)), ] )
+                
 	lines = value[1].split('\n')
         frequency, utilisation = lines[0].split(',')
-        if 'Payshield Total usage' in item:
+        if 'Payshield usage Total' in item:
             return (0, "Total command usage is %d" % int(utilisation), [ ( "usage", int(utilisation)), ] )
+        if 'Payshield HostCmdVolume' in item:
+            return (0, "Raw command usage string is %s" % value[1] )
         for monitoredcmd in monitoredcommands:
             if monitoredcmd in item:
                 if len(lines) == 1:  
@@ -38,9 +49,8 @@ def check_payshield_utilisation(item, _no_params, info):
             for commands in lines[1].split(";"):
                if len(commands.split(',')) > 1:
                    cmd, volume = commands.split(',')
-                   if 'Payshield %s usage' % cmd == item:
-                       commanddictionary = { "LQ": "LQ stuff", "M0": "M0 encrypt", "M2": "M2 encrypt", "N0": "N0 Decrypt"}
-                       return (0, 'the command %s was used %d times in last %s Seconds' % (cmd, int(volume), frequency), [ ("%s" % cmd, int(volume)), ])
+                   if 'Payshield usage %s' % cmd == item:
+                       return (0, 'the command %s was used %d times in last %s Seconds (%s)' % (cmd, int(volume), frequency, commanddictionary.get(cmd, "")), [ ("%s" % cmd, int(volume)), ])
         else:
 	    if 'usage' in item:
    	        return (0, 'not used in last %s Seconds' % frequency)
