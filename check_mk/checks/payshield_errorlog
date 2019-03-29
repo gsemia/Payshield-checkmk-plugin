@@ -1,0 +1,32 @@
+#!/usr/bin/python
+
+# OIDs used:
+# THALES-PAYSHIELD::ps9000LogsErrorlogTotalCount.0      		.1.3.6.1.4.1.4096.2.2.9000.11.1.1.0
+#
+# Scan function looks for Enterprise 'THALES-PAYSHIELD' OID and if it exists we continue
+
+# Author: Rolf Koch - rolf.koch@netcetera.com - http://netcetera.com
+
+def inventory_payshield_errorlog(info):
+    yield 'Payshield Error Log', None
+
+def check_payshield_errorlog(item, _no_params, info):
+    for index, value  in enumerate(info[0]):
+        errorraw=value
+        error = int(errorraw[0])
+        if 'Payshield Error Log'  in item:
+            if error >= 1:
+                return (2, "Errors found in errorlog: %s errors" % error, [ ( "error", error), ] )
+            else:
+                return (0, "No Errors found in errorlog: %s errors" % error , [ ( "error", error), ] )
+
+check_info["payshield_errorlog"] = {
+    "check_function"        : check_payshield_errorlog,
+    "inventory_function"    : inventory_payshield_errorlog,
+    "service_description"   : "%s",
+    "has_perfdata"          : False,
+    "snmp_scan_function"    : lambda oid:  oid(".1.3.6.1.4.1.4096") != None ,
+    "snmp_info"             : [( ".1.3.6.1.4.1.4096.2.2.9000", [
+                                  "11.1.1.0",   # ps9000LogsErrorlogTotalCount.0
+                              ])],
+}
