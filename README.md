@@ -1,5 +1,8 @@
-This repository contains the Thales Payshield 9000 HSM snmp check_mk plugins to monitor the Thales payshield 9000 hsm
+This repository contains the Monitoring Plugins for Check_mk for the following Thales HSM Types:
 
-to install the plugin add it the the /omd/sites/<sitename>/local/check_mk/checks folder 
+Thales Payshield 9000 
+Thales Payshield 10000 (Thales Payshield 10k) 
 
-the payshield hsm must already be monitored with snmp in check_mk.
+To install the plugin merge the content of the check_mk folder into the /omd/sites/<<sitename>>/local/share/check_mk folder 
+
+The payshield hsm must already be monitored with snmp in check_mk.
