@@ -1,0 +1,37 @@
+#!/usr/bin/python
+
+# OIDs used:
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldHealthDiagSelfTestOK.0	.1.3.6.1.4.1.4096.2.2.10000.11.1.2.0
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldHealthDiagSelfTestList.0	.1.3.6.1.4.1.4096.2.2.10000.11.1.4.0
+
+# Scan function looks for Enterprise 'THALES-ESECURITY-PAYSHIELD-MIB' OID and if it exists we continue
+
+# Author: Rolf Koch - rolf.koch@netcetera.com - http://netcetera.com
+
+def inventory_payshield10k_health_diag_self_test_ok(info):
+
+    for index, value in enumerate(info[0]):
+        yield 'Payshield Health Diag Self Test' , None
+        break
+
+
+def check_payshield10k_health_diag_self_test_ok(item, _no_params, info):
+    for checkname, value  in enumerate(info[0]):
+	if value[0] == "0":
+            return (2, "CRIT - %s CRITICAL - %s" % (item, value[1]) )
+    	elif value[0] == "1":
+            return (0, "OK - %s OK %s" % (item, value[1]))
+    	return (3, "Check problem - UNKNOWN")
+
+check_info["payshield10k_selfdiag"] = {
+    "check_function"        : check_payshield10k_health_diag_self_test_ok,
+    "inventory_function"    : inventory_payshield10k_health_diag_self_test_ok,
+    "service_description"   : "%s",
+    "has_perfdata"          : False,
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4096") and oid(".1.3.6.1.4.1.4096.2.2.10000.2.1.0") is not None ,
+    "snmp_info"             : [( ".1.3.6.1.4.1.4096.2.2.10000.11.1", [
+			"2",    # payShieldHealthDiagSelfTestOK.0
+                        "4",    # payShieldHealthDiagSelfTestList.0
+
+])],
+}

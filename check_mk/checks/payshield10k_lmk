@@ -1,0 +1,69 @@
+#!/usr/bin/python
+
+# OIDs used:
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkNumLoaded.0 				.1.3.6.1.4.1.4096.2.2.10000.3.1.0
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkNumTestLmksLoaded.0 			.1.3.6.1.4.1.4096.2.2.10000.3.2.0
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkNumOldLmksLoaded.0 			.1.3.6.1.4.1.4096.2.2.10000.3.3.0
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusLoaded.x 				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.2.1
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusAuth.x				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.3.1
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusNumAuthActivities.x 		.1.3.6.1.4.1.4096.2.2.10000.3.4.1.4.1
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusScheme.x				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.5.1
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusAlgorithm.x				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.6.1
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusLiveTest.x				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.7.1
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusComments.x				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.8.1
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusCheckDigits.x			.1.3.6.1.4.1.4096.2.2.10000.3.4.1.9.1
+# Scan function looks for Enterprise 'THALES-PAYSHIELD' OID and if it exists we continue
+
+# Author: Rolf Koch - rolf.koch@netcetera.com - http://netcetera.com
+
+def inventory_payshield10k_lmk(info):
+    yield 'Payshield LMK Num Loaded', None
+    yield 'Payshield LMK Num Test Loaded', None
+    yield 'Payshield LMK Num Old Loaded', None
+    for index, value in enumerate(info[0]):
+        if value[3] == '1': 
+            yield 'Payshield LMK Info %d' % index, None
+
+
+def check_payshield10k_lmk(item, _no_params, info):
+#    print info
+    for index, value  in enumerate(info[0]):
+#        print index
+        numloaded, numtestloaded, numoldloaded, statusloaded, statusauth, statusnumauthactivities, statusscheme, statusalg, statuslivetest, statuscomment, statuscheckvalue = value
+#        print statuscomment 
+	if 'Payshield LMK Num Loaded' in item:
+            return (0, "Currently there are %s LMK loaded" % numloaded)
+        elif 'Payshield LMK Num Test Loaded' in item:
+	    return (0, "Currently there are %s TEST LMK loaded" % numtestloaded) 
+        elif 'Payshield LMK Num Old Loaded' in item:
+            if int(numoldloaded) > 0:
+                 return (0, "Currently there are %s OLD LMK loaded" % numoldloaded)
+            else:
+                 return (0, "No OLD LMK are loaded" )
+        elif 'Payshield LMK Info %d' % index  in item:
+            scheme = {"1" : "Unknown", "2" : "Variant", "3" : "Keyblock", "4": "Aes"}
+            algorithm = {"1" : "Unknown", "2": "3Des2Key", "3": "3Des3Key", "4": "Aes256"}
+            livetest = { "1" : "lmkStatusUnknown", "2" : "Live", "3": "Test" }
+            return (0, "LMK %d %s %s \nloaded %s\nAuth %s\nNumAuthActivities: %s\nScheme: \"%s\" \nAlgorithm: \"%s\"\nLiveTest: \"%s\"\nComment: \"%s\"\nCheckvalue: \"%s\"" % (index, statuscomment, statuscheckvalue, statusloaded, statusauth, statusnumauthactivities, scheme[statusscheme], algorithm[statusalg], livetest[statuslivetest], statuscomment, statuscheckvalue) )
+
+
+check_info["payshield10k_lmk"] = {
+    "check_function"        : check_payshield10k_lmk,
+    "inventory_function"    : inventory_payshield10k_lmk,
+    "service_description"   : "%s",
+    "has_perfdata"          : False,
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4096") and oid(".1.3.6.1.4.1.4096.2.2.10000.2.1.0") is not None ,
+    "snmp_info"             : [( ".1.3.6.1.4.1.4096.2.2.10000.3", [
+                                  "1.0",   # payShieldLmkNumLoaded.0
+                                  "2.0",   # payShieldLmkNumTestLmksLoaded.0
+                                  "3.0",   # payShieldLmkNumOldLmksLoaded.0
+                                  "4.1.2", # payShieldLmkStatusLoaded.x
+                                  "4.1.3", # payShieldLmkStatusAuth.x
+                                  "4.1.4", # payShieldLmkStatusNumAuthActivities.x
+                                  "4.1.5", # payShieldLmkStatusScheme.x
+                                  "4.1.6", # payShieldLmkStatusAlgorithm.x
+                                  "4.1.7", # ps10000LmkStatusLiveTest.x
+                                  "4.1.8", # payShieldLmkStatusComments.x
+                                  "4.1.9"  # payShieldLmkStatusCheckDigits.x
+                              ])],
+}

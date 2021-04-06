@@ -43,7 +43,7 @@ check_info["payshield_info"] = {
     "inventory_function"    : inventory_payshield_info,
     "service_description"   : "%s",
     "has_perfdata"          : False,
-    "snmp_scan_function"    : lambda oid:  oid(".1.3.6.1.4.1.4096") != None ,
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4096") and oid(".1.3.6.1.4.1.4096.2.2.9000.3.1.0") is not None ,
     "snmp_info"             : [( ".1.3.6.1.4.1.4096.2.2.9000", [
                                   "6.2.0",   # ps9000SystemSerialNum.0
                                   "8.1.0",   # ps9000VersionSoftwareBaseRelease.0

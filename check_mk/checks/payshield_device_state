@@ -20,11 +20,14 @@ def check_payshield_device_state(item, _no_params, info):
     for checkname, value  in enumerate(info[0]):
 	if 'Payshield Device State' in item:
             if value[0] == "0":
-                return (2, "CRIT - %s - Secure (two Keys are turned)" % item )
+                return (1, "CRIT - %s - Secure (two Keys are turned)" % item )
        	    elif value[0] == "1":
-                return (2, "CRIT - %s - Offline (One Key is turned)" % item )
+                return (1, "CRIT - %s - Offline (One Key is turned)" % item )
             elif value[0] == "2":
                 return (0, "OK - %s -  Online (No Key is turned)" % item)
+            elif value[0] == "4":
+                return (0, "OK - %s -  Online (Serial cable connected)" % item)
+
         
     	    return (3, "cannot determine Payshield Device State - UNKNOWN value: %s" % value[0])
         elif 'Payshield Tamper State' in item:
@@ -42,7 +45,7 @@ check_info["payshield_device_state"] = {
     "inventory_function"    : inventory_payshield_device_state,
     "service_description"   : "%s",
     "has_perfdata"          : False,
-    "snmp_scan_function"    : lambda oid:  oid(".1.3.6.1.4.1.4096") != None ,
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4096") and oid(".1.3.6.1.4.1.4096.2.2.9000.3.1.0") is not None ,
     "snmp_info"             : [( ".1.3.6.1.4.1.4096.2.2.9000.3", [
               			  "1.0",  # ps9000StateDevice.0
                                   "2.1.0", #ps9000StateTamperState.0

@@ -1,0 +1,24 @@
+title: Thales Payshield 10K Health Diag Self Test
+agents: snmp
+catalog: hw/Payshield
+license: Propertary
+distribution: Propertary
+description:
+ This check monitors the reported Health Diag self Test of a Thales Payshield HSM via SNMP. 
+
+ The output of the command can read the full reported selfdiag string. Example: OK - Payshield Health Diag Self Test OK DES:PASSED;AES:PASSED;ECDSA:PASSED;HMAC:PASSED;MD5:PASSED;SHA:PASSED;RSA:PASSED;RNG:PASSED;RTC:PASSED;Memory:PASSED;Power:PASSED;Battery:PASSED;Fans:PASSED;Temperature:PASSED;Voltage:PASSED;udpServer:PASSED;tcpServer:PASSED;
+ 
+ Payshield Health Diag Self Test SNMP value can have three states:
+
+ 0 = Health Test Critical (CRITICAL)
+
+ 1 = Health Test OK (OK)
+
+ 3 = Health Test Unknown (UNKNOWN) 
+
+ Prerequisite: The Health Test count collection must be enabled on the HSM. See Payshield console command HEALTHENABLE for more details.
+
+
+inventory:
+ This check creates "Payshield Health Diag Self Test" if the THALES-ESECURITY-PAYSHIELD-MIB SNMP OID is found
+

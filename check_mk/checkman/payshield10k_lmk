@@ -1,0 +1,41 @@
+title: Thales Payshield 10K LMK 
+agents: snmp
+catalog: hw/Payshield
+license: Propertary
+distribution: Propertary
+description:
+
+ The check "Payshield LMK Num Old Loaded" is only an informational check which reports how many lmk are loade
+
+ The check "Payshield LMK Info 1" and "Payshield LMK Info 2" .... are created dynamically for each loaded LMK. It provides an overview over the corresponding LMK slot and its details
+
+ Each of these checks provides as Output of check plugin:
+
+ "LMK {ID} {NAME} {KEYCHECKVALUE}"
+
+ and the Output of check plugin provides for example:
+
+ - loaded 1
+
+ - Auth 2
+
+ - NumAuthActivities: 0
+
+ - Scheme: "Variant"
+
+ - Algorithm: "3Des2Key"
+
+ - LiveTest: "Test"
+
+ - Comment: "test"
+
+ - Checkvalue: "12 34 56"
+
+
+ The check Payshield LMK Num Old Loaded is OK as long as there are 0 old lmk loaded and is in WARN state if at least one old lmk is loaded. This may be neede for migrations but is dangerous if an old LMK is loaded for longer time.
+
+ The check Payshield LMK Num Test Loaded is always OK and reports how many LMK in mode "test" are loaded.
+
+inventory:
+ This check creates "Payshield LMK Num Loaded", one check for each loaded LMK: "Payshield LMK Info 1", "Payshield LMK Info 2" ... and "Payshield LMK Num Old Loaded" and "Payshield LMK Num Test Loaded" check if the THALES-ESECURITY-PAYSHIELD-MIB SNMP OID is found
+

@@ -1,0 +1,28 @@
+title: Thales Payshield 10K device state 
+agents: snmp
+catalog: hw/Payshield
+license: Propertary
+distribution: Propertary
+description:
+ This check monitors the device state and the tamper state of a Thales Payshield HSM via SNMP. 
+
+ Payshield Device State SNMP value can have three possible states:
+
+ 0 = Secure (CRITICAL) If this state is detected, it means the two keys on the front of the hsm are turned ON and the hsm is currently offline and in secure state to perform Secure Operations with LMK. This state is to be expected during a Key Ceremony
+
+ 1 = Offline (CRITICAL) If this state is detected it means that one key on the front of the hsm is turned ON and the hsm is in offline mode ready to perform configurations. This state is to be expected during maintenances.
+
+ 2 = Online  (OK) This means everything is ok.
+
+ Payshield Tamper State SNMP value can have three states: 
+
+ 1 = tamperstate unknown (UNKNOWN) The state of the Tempering is unknown.
+
+ 2 = no tampering detected (OK) This means everything is OK.
+
+ 3 = tampering detected (CRIT) This means that that there is tampering reported by the device and perhaps the LMK should be considered compromised.
+
+
+inventory:
+ This check creates "Payshield Device State" and "Payshield Tamper State" if the THALES-ESECURITY-PAYSHIELD-MIB SNMP OID is found
+

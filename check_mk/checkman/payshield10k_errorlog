@@ -1,0 +1,14 @@
+title: Thales Payshield 10K Error Log  
+agents: snmp
+catalog: hw/Payshield
+license: Propertary
+distribution: Propertary
+description:
+ This check alerts if the payshield hsm has errors in the error log. (if Error led on device is red) 
+
+perfdata:
+ One graph for payshield error counts will be created
+
+inventory:
+ This check creates "Payshield Error Log" check if the THALES-ESECURITY-PAYSHIELD-MIB SNMP OID is found
+

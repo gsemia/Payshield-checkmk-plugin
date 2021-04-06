@@ -37,7 +37,7 @@ def check_payshield_lmk(item, _no_params, info):
 	    return (0, "Currently there are %s TEST LMK loaded" % numtestloaded) 
         elif 'Payshield LMK Num Old Loaded' in item:
             if int(numoldloaded) > 0:
-                 return (1, "Currently there are %s OLD LMK loaded" % numoldloaded)
+                 return (0, "Currently there are %s OLD LMK loaded" % numoldloaded)
             else:
                  return (0, "No OLD LMK are loaded" )
         elif 'Payshield LMK Info %d' % index  in item:
@@ -52,7 +52,7 @@ check_info["payshield_lmk"] = {
     "inventory_function"    : inventory_payshield_lmk,
     "service_description"   : "%s",
     "has_perfdata"          : False,
-    "snmp_scan_function"    : lambda oid:  oid(".1.3.6.1.4.1.4096") != None ,
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4096") and oid(".1.3.6.1.4.1.4096.2.2.9000.3.1.0") is not None ,
     "snmp_info"             : [( ".1.3.6.1.4.1.4096.2.2.9000.4", [
               			  "1.0",   # ps9000LmkNumLoaded.0
                                   "2.0",   # ps9000LmkNumTestLmksLoaded.0

@@ -1,0 +1,81 @@
+#!/usr/bin/python
+
+# OIDs used:
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldSystemDateAndTime.0                                  .1.3.6.1.4.1.4096.2.2.10000.5.1.0 = Hex-STRING: 07 E4 0B 0D 0D 13 2D 00
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldSystemSerialNum.0                                    .1.3.6.1.4.1.4096.2.2.10000.5.2.0 = STRING: "S0246378732H"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldSystemModel.0                                        .1.3.6.1.4.1.4096.2.2.10000.5.3.0 = STRING: "PS10-S"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldFraudPinVerifyLimitsExceeded.0                       .1.3.6.1.4.1.4096.2.2.10000.6.1.0 = INTEGER: 2
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldFraudPinAttackLimitsExceeded.0                       .1.3.6.1.4.1.4096.2.2.10000.6.2.0 = INTEGER: 2
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldVersionSoftwareBaseRelease.0                         .1.3.6.1.4.1.4096.2.2.10000.7.1.0 = STRING: "1.0f"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldVersionSoftwareRevision.0                            .1.3.6.1.4.1.4096.2.2.10000.7.2.0 = STRING: "1500-1022"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldVersionSoftwareBuildNumber.0                         .1.3.6.1.4.1.4096.2.2.10000.7.3.0 = STRING: "0000"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldVersionSoftwareHSMCoreAPIVersion.0          			.1.3.6.1.4.1.4096.2.2.10000.7.4.0 = ""
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldVersionSoftwareCPLDVersion.0                         .1.3.6.1.4.1.4096.2.2.10000.7.5.0 = STRING: "1.2.3"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldVersionSoftwareSPVersion.0                           .1.3.6.1.4.1.4096.2.2.10000.7.6.0 = STRING: "1.1.29"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldVersionSoftwareSPBootVersion.0                       .1.3.6.1.4.1.4096.2.2.10000.7.7.0 = STRING: "1.0.0"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldVersionSoftwareBootstrapVersion.0            		.1.3.6.1.4.1.4096.2.2.10000.7.8.0 = STRING: "1.1.40"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldVersionSoftwareFirmwareVersion.0                     .1.3.6.1.4.1.4096.2.2.10000.7.9.0 = STRING: "1.3.1"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldVersionSoftwareDeploymentVersion.0           		.1.3.6.1.4.1.4096.2.2.10000.7.10.0 = STRING: "1.3.2"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLicensingPerformanceModel.0                          .1.3.6.1.4.1.4096.2.2.10000.8.1.0 = INTEGER: 25
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLicensingPackage.0                                   .1.3.6.1.4.1.4096.2.2.10000.8.2.0 = STRING: "Premium Package:Premium Key Management;Magnetic Stripe Issuing;Magnetic Stripe Transaction Processing;EMV Chip, Contactless & Mobile Issuing;EMV Transaction Processing;User Authentication;Data Protection;"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLicensingOptionalLicenseCount.0                      .1.3.6.1.4.1.4096.2.2.10000.8.3.0 = INTEGER: 1
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLicensingOptionalLicensesList.0                      .1.3.6.1.4.1.4096.2.2.10000.8.4.0 = STRING: "001:LMKx5;"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLicensingCryptoAlgorithmCount.0                      .1.3.6.1.4.1.4096.2.2.10000.8.5.0 = INTEGER: 3
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLicensingCryptoAlgorithmList.0                       .1.3.6.1.4.1.4096.2.2.10000.8.6.0 = STRING: "3DES;AES;RSA;"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldEnabledHostCommandsCount.0                           .1.3.6.1.4.1.4096.2.2.10000.9.1.0 = INTEGER: 38
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldEnabledHostCommandsList.0                            .1.3.6.1.4.1.4096.2.2.10000.9.2.0 = STRING: "A0;A6;A8;B2;BS;BU;BW;CC;CS;CW;CY;EI;EO;EW;EY;GI;GK;IO;IQ;IU;IW;IY;L0;L8;LG;LQ;LS;LU;LW;LY;M0;M2;M4;N0;NC;NO;RA;RY;"
+# THALES-ESECURITY-PAYSHIELD-MIB::payShieldSettingsPCICompliant.0								.1.3.6.1.4.1.4096.2.2.10000.15.1.0 = INTEGER: 1
+#
+# Scan function looks for Enterprise 'THALES-ESECURITY-PAYSHIELD-MIB' OID and if it exists we continue
+
+# Author: Rolf Koch - rolf.koch@netcetera.com - http://netcetera.com
+
+def inventory_payshield10k_info(info):
+    yield 'Payshield Info', None
+
+
+
+def check_payshield10k_info(item, _no_params, info):
+#    print info
+    for index, value  in enumerate(info[0]):
+#        print index
+        payShieldSystemDateAndTime, payShieldSystemSerialNum, payShieldSystemModel, payShieldFraudPinVerifyLimitsExceeded, payShieldFraudPinAttackLimitsExceeded, payShieldVersionSoftwareBaseRelease, payShieldVersionSoftwareRevision, payShieldVersionSoftwareBuildNumber, payShieldVersionSoftwareHSMCoreAPIVersion, payShieldVersionSoftwareCPLDVersion, payShieldVersionSoftwareSPVersion, payShieldVersionSoftwareSPBootVersion, payShieldVersionSoftwareBootstrapVersion, payShieldVersionSoftwareFirmwareVersion, payShieldVersionSoftwareDeploymentVersion, payShieldLicensingPerformanceModel, payShieldLicensingPackage, payShieldLicensingOptionalLicenseCount, payShieldLicensingOptionalLicensesList, payShieldLicensingCryptoAlgorithmCount, payShieldLicensingCryptoAlgorithmList, payShieldEnabledHostCommandsCount, payShieldEnabledHostCommandsList, payShieldSettingsPCICompliant = value
+#        print statuscomment
+        if 'Payshield Info'  in item:
+            pcicompliance = { "1" : "Yes", "2" : "No" }
+            return (0, "Payshield Info: %s \n System Serial Number: %s \nSystem Date and Time: %s\nSystem Model: %s\nFraud Pin Verify Limit Exceeded: %s\nFraud Pin Attack Limits Exceeded: %s\nVersion Software Base Release: %s\nVersion Software Revision %s\nVersion Software Build Number: %s\nVersion Software HSM Core API Version: %s \nVersion Software CPLD Version: %s\nVersion Software SP Version: %s\nVersion Software SP Boot Version: %s\nVersion Software Bootstrap Version: %s\nVersion Software Firmware Version: %s\nVersion Software Deployment Version: %s\nLicensing Performance Model: %s\nLicensing Package: %s\nLicensing Optional License Count: %s\nLicensing Optional Licenses List: %s\nLicensing Crypto Algorithm Count: %s\nLicensing Crypto Algorithm List: %s\nEnabled Host Commands Count: %s\nEnabled Host Commands List: %s\nSettings PCI Compliant: %s" % (payShieldSystemSerialNum, payShieldSystemSerialNum, payShieldSystemDateAndTime, payShieldSystemModel, payShieldFraudPinVerifyLimitsExceeded, payShieldFraudPinAttackLimitsExceeded, payShieldVersionSoftwareBaseRelease, payShieldVersionSoftwareRevision, payShieldVersionSoftwareBuildNumber, payShieldVersionSoftwareHSMCoreAPIVersion, payShieldVersionSoftwareCPLDVersion, payShieldVersionSoftwareSPVersion, payShieldVersionSoftwareSPBootVersion, payShieldVersionSoftwareBootstrapVersion, payShieldVersionSoftwareFirmwareVersion, payShieldVersionSoftwareDeploymentVersion, payShieldLicensingPerformanceModel, payShieldLicensingPackage, payShieldLicensingOptionalLicenseCount, payShieldLicensingOptionalLicensesList, payShieldLicensingCryptoAlgorithmCount, payShieldLicensingCryptoAlgorithmList, payShieldEnabledHostCommandsCount, payShieldEnabledHostCommandsList, pcicompliance[payShieldSettingsPCICompliant] ) )
+
+
+check_info["payshield10k_info"] = {
+    "check_function"        : check_payshield10k_info,
+    "inventory_function"    : inventory_payshield10k_info,
+    "service_description"   : "%s",
+    "has_perfdata"          : False,
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4096") and oid(".1.3.6.1.4.1.4096.2.2.10000.2.1.0") is not None ,
+    "snmp_info"             : [( ".1.3.6.1.4.1.4096.2.2.10000", [
+								"5.1.0",   #	payShieldSystemDateAndTime.0               
+								"5.2.0",   #	payShieldSystemSerialNum.0                 
+								"5.3.0",   #	payShieldSystemModel.0                     
+								"6.1.0",   #	payShieldFraudPinVerifyLimitsExceeded.0    
+								"6.2.0",   #	payShieldFraudPinAttackLimitsExceeded.0    
+								"7.1.0",   #	payShieldVersionSoftwareBaseRelease.0      
+								"7.2.0",   #	payShieldVersionSoftwareRevision.0         
+								"7.3.0",   #	payShieldVersionSoftwareBuildNumber.0      
+								"7.4.0",   #	payShieldVersionSoftwareHSMCoreAPIVersion.0						
+								"7.5.0",   #	payShieldVersionSoftwareCPLDVersion.0      
+								"7.6.0",   #	payShieldVersionSoftwareSPVersion.0        
+								"7.7.0",   #	payShieldVersionSoftwareSPBootVersion.0    
+								"7.8.0",   #	payShieldVersionSoftwareBootstrapVersion.0 
+								"7.9.0",   #	payShieldVersionSoftwareFirmwareVersion.0  
+								"7.10.0",  #	payShieldVersionSoftwareDeploymentVersion.0							
+								"8.1.0",   #	payShieldLicensingPerformanceModel.0       
+								"8.2.0",   #	payShieldLicensingPackage.0                
+								"8.3.0",   #	payShieldLicensingOptionalLicenseCount.0   
+								"8.4.0",   #	payShieldLicensingOptionalLicensesList.0   
+								"8.5.0",   #	payShieldLicensingCryptoAlgorithmCount.0   
+								"8.6.0",   #	payShieldLicensingCryptoAlgorithmList.0    
+								"9.1.0",   #	payShieldEnabledHostCommandsCount.0        
+								"9.2.0",   #	payShieldEnabledHostCommandsList.0      
+						        "15.1.0",  #    payShieldSettingsPCICompliant.0
+                              ])],
+}

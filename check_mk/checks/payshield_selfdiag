@@ -28,7 +28,7 @@ check_info["payshield_selfdiag"] = {
     "inventory_function"    : inventory_payshield_health_diag_self_test_ok,
     "service_description"   : "%s",
     "has_perfdata"          : False,
-    "snmp_scan_function"    : lambda oid:  oid(".1.3.6.1.4.1.4096") != None ,
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4096") and oid(".1.3.6.1.4.1.4096.2.2.9000.3.1.0") is not None ,
     "snmp_info"             : [( ".1.3.6.1.4.1.4096.2.2.9000.12.1", [
 			"2",    # ps9000HealthDiagSelfTestOK
                         "4",    # ps9000HealthDiagSelfTestList.0
