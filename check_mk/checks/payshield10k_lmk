@@ -31,10 +31,10 @@ def check_payshield10k_lmk(item, _no_params, info):
 #        print index
         numloaded, numtestloaded, numoldloaded, statusloaded, statusauth, statusnumauthactivities, statusscheme, statusalg, statuslivetest, statuscomment, statuscheckvalue = value
 #        print statuscomment 
-	if 'Payshield LMK Num Loaded' in item:
+        if 'Payshield LMK Num Loaded' in item:
             return (0, "Currently there are %s LMK loaded" % numloaded)
         elif 'Payshield LMK Num Test Loaded' in item:
-	    return (0, "Currently there are %s TEST LMK loaded" % numtestloaded) 
+            return (0, "Currently there are %s TEST LMK loaded" % numtestloaded) 
         elif 'Payshield LMK Num Old Loaded' in item:
             if int(numoldloaded) > 0:
                  return (0, "Currently there are %s OLD LMK loaded" % numoldloaded)

@@ -58,15 +58,15 @@ def inventory_payshield_utilisation(info):
 def check_payshield_utilisation(item, _no_params, info):
     for index, value in enumerate(info[0]):
         load, hostcmdvolume = value
-	if 'Payshield Utilisation Load' in item:
+        if 'Payshield Utilisation Load' in item:
             if int(load) >= 90:
-     	        return (2, "High usage above 90!! Current Utilisation Load is %s" % load, [ ( "load", int(load)), ] )
+                     return (2, "High usage above 90!! Current Utilisation Load is %s" % load, [ ( "load", int(load)), ] )
             if int(load) >= 75:
                 return (1, "Usage above 75!! Current Utilisation Load is %s" % load, [ ( "load", int(load)), ] )
             else:
                 return (0, "Current Utilisation Load is %s" % load, [ ( "load", int(load)), ] )
 
-	lines = value[1].split('\n')
+        lines = value[1].split('\n')
         frequency, utilisation = lines[0].split(',')
         if 'Payshield usage Total' in item:
             return (0, "Total command usage is %d" % int(utilisation), [ ( "usage", int(utilisation)), ] )
@@ -87,8 +87,8 @@ def check_payshield_utilisation(item, _no_params, info):
                    if 'Payshield usage %s' % cmd == item:
                        return (0, 'the command %s was used %d times in last %s Seconds (%s)' % (cmd, int(volume), frequency, commanddictionary.get(cmd, "")), [ ("%s" % cmd, int(volume)), ])
         else:
-	    if 'usage' in item:
-   	        return (0, 'not used in last %s Seconds' % frequency)
+            if 'usage' in item:
+                   return (0, 'not used in last %s Seconds' % frequency)
             else:
                 return (3, "unknown situation with %s" % lines)
 

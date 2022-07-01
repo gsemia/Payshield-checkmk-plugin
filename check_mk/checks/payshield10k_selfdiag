@@ -17,11 +17,11 @@ def inventory_payshield10k_health_diag_self_test_ok(info):
 
 def check_payshield10k_health_diag_self_test_ok(item, _no_params, info):
     for checkname, value  in enumerate(info[0]):
-	if value[0] == "0":
+        if value[0] == "0":
             return (2, "CRIT - %s CRITICAL - %s" % (item, value[1]) )
-    	elif value[0] == "1":
+        elif value[0] == "1":
             return (0, "OK - %s OK %s" % (item, value[1]))
-    	return (3, "Check problem - UNKNOWN")
+        return (3, "Check problem - UNKNOWN")
 
 check_info["payshield10k_selfdiag"] = {
     "check_function"        : check_payshield10k_health_diag_self_test_ok,
@@ -30,7 +30,7 @@ check_info["payshield10k_selfdiag"] = {
     "has_perfdata"          : False,
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4096") and oid(".1.3.6.1.4.1.4096.2.2.10000.2.1.0") is not None ,
     "snmp_info"             : [( ".1.3.6.1.4.1.4096.2.2.10000.11.1", [
-			"2",    # payShieldHealthDiagSelfTestOK.0
+                        "2",    # payShieldHealthDiagSelfTestOK.0
                         "4",    # payShieldHealthDiagSelfTestList.0
 
 ])],

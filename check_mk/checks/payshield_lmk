@@ -1,17 +1,17 @@
 #!/usr/bin/python
 
 # OIDs used:
-# THALES-PAYSHIELD::ps9000LmkNumLoaded.0            	.1.3.6.1.4.1.4096.2.2.9000.4.1.0
-# THALES-PAYSHIELD::ps9000LmkNumTestLmksLoaded.0 	.1.3.6.1.4.1.4096.2.2.9000.4.2.0
-# THALES-PAYSHIELD::ps9000LmkNumOldLmksLoaded.0     	.1.3.6.1.4.1.4096.2.2.9000.4.3.0
-# THALES-PAYSHIELD::ps9000LmkStatusLoaded.x   		.1.3.6.1.4.1.4096.2.2.9000.4.4.1.2.1
-# THALES-PAYSHIELD::ps9000LmkStatusAuth.x		.1.3.6.1.4.1.4096.2.2.9000.4.4.1.3.1
-# THALES-PAYSHIELD::ps9000LmkStatusNumAuthActivities.x	.1.3.6.1.4.1.4096.2.2.9000.4.4.1.4.1
-# THALES-PAYSHIELD::ps9000LmkStatusScheme.x		.1.3.6.1.4.1.4096.2.2.9000.4.4.1.5.1
-# THALES-PAYSHIELD::ps9000LmkStatusAlgorithm.x		.1.3.6.1.4.1.4096.2.2.9000.4.4.1.6.1
-# THALES-PAYSHIELD::ps9000LmkStatusLiveTest.x		.1.3.6.1.4.1.4096.2.2.9000.4.4.1.7.1
-# THALES-PAYSHIELD::ps9000LmkStatusComments.1		.1.3.6.1.4.1.4096.2.2.9000.4.4.1.8.1
-# THALES-PAYSHIELD::ps9000LmkStatusCheckDigits.1 	.1.3.6.1.4.1.4096.2.2.9000.4.4.1.9.1
+# THALES-PAYSHIELD::ps9000LmkNumLoaded.0.1.3.6.1.4.1.4096.2.2.9000.4.1.0
+# THALES-PAYSHIELD::ps9000LmkNumTestLmksLoaded.0.1.3.6.1.4.1.4096.2.2.9000.4.2.0
+# THALES-PAYSHIELD::ps9000LmkNumOldLmksLoaded.0.1.3.6.1.4.1.4096.2.2.9000.4.3.0
+# THALES-PAYSHIELD::ps9000LmkStatusLoaded.x.1.3.6.1.4.1.4096.2.2.9000.4.4.1.2.1
+# THALES-PAYSHIELD::ps9000LmkStatusAuth.x.1.3.6.1.4.1.4096.2.2.9000.4.4.1.3.1
+# THALES-PAYSHIELD::ps9000LmkStatusNumAuthActivities.x.1.3.6.1.4.1.4096.2.2.9000.4.4.1.4.1
+# THALES-PAYSHIELD::ps9000LmkStatusScheme.x.1.3.6.1.4.1.4096.2.2.9000.4.4.1.5.1
+# THALES-PAYSHIELD::ps9000LmkStatusAlgorithm.x.1.3.6.1.4.1.4096.2.2.9000.4.4.1.6.1
+# THALES-PAYSHIELD::ps9000LmkStatusLiveTest.x.1.3.6.1.4.1.4096.2.2.9000.4.4.1.7.1
+# THALES-PAYSHIELD::ps9000LmkStatusComments.1.1.3.6.1.4.1.4096.2.2.9000.4.4.1.8.1
+# THALES-PAYSHIELD::ps9000LmkStatusCheckDigits.1.1.3.6.1.4.1.4096.2.2.9000.4.4.1.9.1
 # Scan function looks for Enterprise 'THALES-PAYSHIELD' OID and if it exists we continue
 
 # Author: Rolf Koch - rolf.koch@netcetera.com - http://netcetera.com
@@ -31,10 +31,10 @@ def check_payshield_lmk(item, _no_params, info):
 #        print index
         numloaded, numtestloaded, numoldloaded, statusloaded, statusauth, statusnumauthactivities, statusscheme, statusalg, statuslivetest, statuscomment, statuscheckvalue = value
 #        print statuscomment 
-	if 'Payshield LMK Num Loaded' in item:
+        if 'Payshield LMK Num Loaded' in item:
             return (0, "Currently there are %s LMK loaded" % numloaded)
         elif 'Payshield LMK Num Test Loaded' in item:
-	    return (0, "Currently there are %s TEST LMK loaded" % numtestloaded) 
+            return (0, "Currently there are %s TEST LMK loaded" % numtestloaded) 
         elif 'Payshield LMK Num Old Loaded' in item:
             if int(numoldloaded) > 0:
                  return (0, "Currently there are %s OLD LMK loaded" % numoldloaded)
@@ -54,7 +54,7 @@ check_info["payshield_lmk"] = {
     "has_perfdata"          : False,
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4096") and oid(".1.3.6.1.4.1.4096.2.2.9000.3.1.0") is not None ,
     "snmp_info"             : [( ".1.3.6.1.4.1.4096.2.2.9000.4", [
-              			  "1.0",   # ps9000LmkNumLoaded.0
+                                  "1.0",   # ps9000LmkNumLoaded.0
                                   "2.0",   # ps9000LmkNumTestLmksLoaded.0
                                   "3.0",   # ps9000LmkNumOldLmksLoaded.0
                                   "4.1.2", # ps9000LmkStatusLoaded.x0
