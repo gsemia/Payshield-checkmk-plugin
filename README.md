@@ -4,14 +4,18 @@ This repository contains the Monitoring Plugins for Check_mk for the following H
 * Thales Payshield 9000 
 * Thales Payshield 10000 (Thales Payshield 10k) 
 
+The check plugins are in the legacy format and are compatible with Check_mk 1.x and 2.x versions.
+
 # Install
 To install the plugin merge the content of the check_mk folder into the /omd/sites/#sitename#/local/share/check_mk folder 
 
 # Notes
 The payshield hsm must already be monitored with snmp in check_mk.
 
-# Which Payshield commands are supported by this Plugin?
-Currently the following Commands are supported. But this list can easily be updated.
+There are currently no check_mk check parameters, parameters must be changed in the python code of the check plugins.
+
+# Which Payshield commands utilisation stats are supported by the payshield10k_utilisation check?
+Currently the following Command utilisation stats are supported. But this list can easily be updated.
 
 * "A0": "Generate Key",
 * "A6": "Import a Key",
