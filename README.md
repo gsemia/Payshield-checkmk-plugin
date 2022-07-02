@@ -14,6 +14,17 @@ The payshield hsm must already be monitored with snmp in check_mk.
 
 There are currently no check_mk check parameters, parameters must be changed in the python code of the check plugins.
 
+# How can i get the utilisation Stats to work?
+
+For the Utilisation stats to work properly via snmp a couple of settings are rquired:
+
+via console use the following commands:
+* use UTILENABLE to enable the collection of stats (Offline mode, No authorization) 
+* use UTILCFG to set the "Measurement period for instantaneous statistics" to 60 seconds (Online mode, No authorization) 
+
+via payshield manager:
+* I don't know.. find out yourself :)
+
 # Which Payshield commands utilisation stats are supported by the payshield10k_utilisation check?
 Currently the following Command utilisation stats are supported. But this list can easily be updated.
 
