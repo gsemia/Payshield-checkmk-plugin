@@ -62,7 +62,6 @@ commanddictionary = {
 "RA": "Cancel Authorized Activities",
 "RY": "Calculate Card Security Codes (AMEX)"}
 
-from pprint import pprint
 
 def parse_payshield_utilisation(string_table):  
     #[['8', '60,4\nA0,00001;B2,00060;M0,00043;M2,00213;']]
@@ -140,8 +139,6 @@ def check_payshield_utilisation(item, section):
 
 
     for command in section["commands"]:
-        #pprint (command)
-        #pprint (item)
         if f"Payshield usage {command["monitoredcmd"]}" in item:
             
             yield Result(
