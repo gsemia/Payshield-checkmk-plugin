@@ -1,13 +1,13 @@
 # Overview 
 This repository contains the Monitoring Plugins for Checkmk for the following HSM Types:
-
-* Thales Payshield 9000 
+ 
 * Thales Payshield 10000 (Thales Payshield 10k) 
 
-The check plugins are in the legacy format and are compatible with Checkmk 1.x and 2.x versions.
+The check plugins are using the cmk.agent_based.v2 format and are compatible with and Check_MK versions 2.2 and 2.3
 
 # Install
-To install the plugin merge the content of the checkmk folder into the /omd/sites/#sitename#/local/share/check_mk folder 
+To install the plugin by copying the local folder into your check_mk site omd folder 
+merge the local folder with your /omd/sites/#sitename#/local folder 
 
 # Notes
 The payshield hsm devices must already be added has hosts and must have snmp enabled and configured in checkmk.
