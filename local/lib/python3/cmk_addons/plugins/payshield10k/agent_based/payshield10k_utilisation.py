@@ -173,7 +173,7 @@ snmp_section_payshield_utilisation_setup = SimpleSNMPSection(
 check_plugin_payshield_utilisation = CheckPlugin(
     name = "payshield10k_utilisation",
     sections = [ "payshield10k_utilisation" ],
-    service_name = "Payshield %s",
+    service_name = "%s",
     discovery_function = discover_payshield_utilisation,
     check_function = check_payshield_utilisation,
 )
