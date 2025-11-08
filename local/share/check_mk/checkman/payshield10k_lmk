@@ -37,5 +37,5 @@ description:
  The check Payshield LMK Num Test Loaded is always OK and reports how many LMK in mode "test" are loaded.
 
 inventory:
- This check creates "Payshield LMK Num Loaded", one check for each loaded LMK: "Payshield LMK Info 1", "Payshield LMK Info 2" ... and "Payshield LMK Num Old Loaded" and "Payshield LMK Num Test Loaded" check if the THALES-ESECURITY-PAYSHIELD-MIB SNMP OID is found
+ This check does not create inventory entries.
 

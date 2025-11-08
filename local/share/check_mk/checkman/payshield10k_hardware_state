@@ -7,5 +7,5 @@ description:
  This check monitors the device hardware state of the FAN, PSU and BATTERY  
 
 inventory:
- This check creates "Payshield HW Fan 1 State", "Payshield HW Fan 2 State", "Payshield HW PSU 1 State", "Payshield HW PSU 2 State" and "Payshield HW Battery State" if the THALES-ESECURITY-PAYSHIELD-MIB SNMP OID is found
+ This check does not create inventory entries.
 

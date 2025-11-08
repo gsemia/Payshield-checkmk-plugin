@@ -20,5 +20,5 @@ description:
 
 
 inventory:
- This check creates "Payshield Health Diag Self Test" if the THALES-ESECURITY-PAYSHIELD-MIB SNMP OID is found
+ This check does not create inventory entries.
 

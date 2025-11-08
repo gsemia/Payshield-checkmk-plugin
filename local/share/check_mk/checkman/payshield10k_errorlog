@@ -10,5 +10,4 @@ perfdata:
  One graph for payshield error counts will be created
 
 inventory:
- This check creates "Payshield Error Log" check if the THALES-ESECURITY-PAYSHIELD-MIB SNMP OID is found
-
+ This check does not create inventory entries.

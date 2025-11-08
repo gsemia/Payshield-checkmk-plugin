@@ -1,0 +1,21 @@
+title: Thales Payshield 10K Security Settings
+agents: snmp
+catalog: hw/Payshield
+license: Proprietary
+distribution: Proprietary
+description:
+ This check monitors the security settings of Thales Payshield 10K devices.
+
+ The output of the check plugin provides:
+
+ - PCI Compliance Status
+ - Hash Security Settings
+ - LMK Status
+
+ Long output of the check plugin provides:
+
+ - Detailed Security Settings Table
+ - All SNMP Security Parameters
+
+inventory:
+ This check does not create inventory entries.

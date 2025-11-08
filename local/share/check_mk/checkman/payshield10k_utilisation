@@ -41,5 +41,5 @@ perfdata:
  One graph for payshield command will be created
 
 inventory:
- One for each monitored payshield command type from the monitoredcommands variable will be created if THALES-ESECURITY-PAYSHIELD-MIB SNMP OID exists
+ This check does not create inventory entries.
 

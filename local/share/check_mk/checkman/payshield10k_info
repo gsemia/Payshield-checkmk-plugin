@@ -38,5 +38,5 @@ description:
  - Settings PCI Compliant: 
 
 inventory:
- This check creates "Payshield Info" check if the THALES-ESECURITY-PAYSHIELD-MIB SNMP OID is found
+ This check does not create inventory entries.
 
