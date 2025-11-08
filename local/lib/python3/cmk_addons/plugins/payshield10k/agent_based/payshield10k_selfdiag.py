@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # OIDs used:
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldHealthDiagSelfTestOK.0	.1.3.6.1.4.1.4096.2.2.10000.11.1.2.0
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldHealthDiagSelfTestList.0	.1.3.6.1.4.1.4096.2.2.10000.11.1.4.0
+# THALES-PAYSHIELD-MIB::payShieldHealthDiagSelfTestOK.0	.1.3.6.1.4.1.4096.2.2.10000.11.1.2.0
+# THALES-PAYSHIELD-MIB::payShieldHealthDiagSelfTestList.0	.1.3.6.1.4.1.4096.2.2.10000.11.1.4.0
 # detect function looks for sysDescr == 'payShield 10K'
 
 # Author: Rolf Koch - rolf.koch@netcetera.com - http://netcetera.com

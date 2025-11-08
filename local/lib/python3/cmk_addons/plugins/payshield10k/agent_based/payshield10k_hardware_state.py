@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
 # OIDs used:
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldStateFanSerialNum.1			.1.3.6.1.4.1.4096.2.2.10000.2.3.1.1.2.1 = STRING: "xxxx"
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldStateFanSerialNum.2			.1.3.6.1.4.1.4096.2.2.10000.2.3.1.1.2.2 = STRING: "xxxx"
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldStateFanState.1			    .1.3.6.1.4.1.4096.2.2.10000.2.3.1.1.3.1 = INTEGER: 1
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldStateFanState.2			    .1.3.6.1.4.1.4096.2.2.10000.2.3.1.1.3.2 = INTEGER: 1
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldStatePSUSerialNum.1			.1.3.6.1.4.1.4096.2.2.10000.2.4.1.1.2.1 = STRING: "yyyy"
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldStatePSUSerialNum.2			.1.3.6.1.4.1.4096.2.2.10000.2.4.1.1.2.2 = STRING: "yyyy"
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldStatePSUState.1			    .1.3.6.1.4.1.4096.2.2.10000.2.4.1.1.3.1 = INTEGER: 1
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldStatePSUState.2			    .1.3.6.1.4.1.4096.2.2.10000.2.4.1.1.3.2 = INTEGER: 1
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldStateBattery.0			    .1.3.6.1.4.1.4096.2.2.10000.2.5.0 = INTEGER: 1
+# THALES-PAYSHIELD-MIB::payShieldStateFanSerialNum.1			.1.3.6.1.4.1.4096.2.2.10000.2.3.1.1.2.1 = STRING: "xxxx"
+# THALES-PAYSHIELD-MIB::payShieldStateFanSerialNum.2			.1.3.6.1.4.1.4096.2.2.10000.2.3.1.1.2.2 = STRING: "xxxx"
+# THALES-PAYSHIELD-MIB::payShieldStateFanState.1			    .1.3.6.1.4.1.4096.2.2.10000.2.3.1.1.3.1 = INTEGER: 1
+# THALES-PAYSHIELD-MIB::payShieldStateFanState.2			    .1.3.6.1.4.1.4096.2.2.10000.2.3.1.1.3.2 = INTEGER: 1
+# THALES-PAYSHIELD-MIB::payShieldStatePSUSerialNum.1			.1.3.6.1.4.1.4096.2.2.10000.2.4.1.1.2.1 = STRING: "yyyy"
+# THALES-PAYSHIELD-MIB::payShieldStatePSUSerialNum.2			.1.3.6.1.4.1.4096.2.2.10000.2.4.1.1.2.2 = STRING: "yyyy"
+# THALES-PAYSHIELD-MIB::payShieldStatePSUState.1			    .1.3.6.1.4.1.4096.2.2.10000.2.4.1.1.3.1 = INTEGER: 1
+# THALES-PAYSHIELD-MIB::payShieldStatePSUState.2			    .1.3.6.1.4.1.4096.2.2.10000.2.4.1.1.3.2 = INTEGER: 1
+# THALES-PAYSHIELD-MIB::payShieldStateBattery.0			    .1.3.6.1.4.1.4096.2.2.10000.2.5.0 = INTEGER: 1
 # detect function looks for sysDescr == 'payShield 10K'
 
 # Author: Rolf Koch - rolf.koch@netcetera.com - http://netcetera.com

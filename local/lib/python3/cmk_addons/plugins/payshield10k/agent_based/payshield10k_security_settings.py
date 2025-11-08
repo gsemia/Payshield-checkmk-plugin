@@ -6,7 +6,7 @@
 # THALES-PAYSHIELD-MIB::payShieldSettingsHashGeneralSetting.0   .1.3.6.1.4.1.4096.2.2.10000.15.3.0
 # THALES-PAYSHIELD-MIB::payShieldSettingsHashConfigureCommand.0 .1.3.6.1.4.1.4096.2.2.10000.15.4.0
 # THALES-PAYSHIELD-MIB::payShieldSettingsHashAuditSetting.0     .1.3.6.1.4.1.4096.2.2.10000.15.5.0
-# THALES-PAYSHIELD-MIB::payShieldSettingsHashLMK.0 			    .1.3.6.1.4.1.4096.2.2.10000.15.6.0
+# THALES-PAYSHIELD-MIB::payShieldSettingsHashLMK.0 		    .1.3.6.1.4.1.4096.2.2.10000.15.6.0
 # THALES-PAYSHIELD-MIB::payShieldSecuritySettingsData.1 		.1.3.6.1.4.1.4096.2.2.10000.15.7.1.2.1 
 # THALES-PAYSHIELD-MIB::payShieldSecuritySettingsData.2 		.1.3.6.1.4.1.4096.2.2.10000.15.7.1.2.2
 # THALES-PAYSHIELD-MIB::payShieldSecuritySettingsData.3 		.1.3.6.1.4.1.4096.2.2.10000.15.7.1.2.3 

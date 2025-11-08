@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 
 # OIDs used:
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkNumLoaded.0 				    .1.3.6.1.4.1.4096.2.2.10000.3.1.0
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkNumTestLmksLoaded.0 			.1.3.6.1.4.1.4096.2.2.10000.3.2.0
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkNumOldLmksLoaded.0 			.1.3.6.1.4.1.4096.2.2.10000.3.3.0
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusLoaded.x 				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.2.1
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusAuth.x				    .1.3.6.1.4.1.4096.2.2.10000.3.4.1.3.1
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusNumAuthActivities.x 	.1.3.6.1.4.1.4096.2.2.10000.3.4.1.4.1
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusScheme.x				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.5.1
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusAlgorithm.x				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.6.1
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusLiveTest.x				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.7.1
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusComments.x				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.8.1
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldLmkStatusCheckDigits.x			.1.3.6.1.4.1.4096.2.2.10000.3.4.1.9.1
+# THALES-PAYSHIELD-MIB::payShieldLmkNumLoaded.0 				    .1.3.6.1.4.1.4096.2.2.10000.3.1.0
+# THALES-PAYSHIELD-MIB::payShieldLmkNumTestLmksLoaded.0 			.1.3.6.1.4.1.4096.2.2.10000.3.2.0
+# THALES-PAYSHIELD-MIB::payShieldLmkNumOldLmksLoaded.0 			.1.3.6.1.4.1.4096.2.2.10000.3.3.0
+# THALES-PAYSHIELD-MIB::payShieldLmkStatusLoaded.x 				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.2.1
+# THALES-PAYSHIELD-MIB::payShieldLmkStatusAuth.x				    .1.3.6.1.4.1.4096.2.2.10000.3.4.1.3.1
+# THALES-PAYSHIELD-MIB::payShieldLmkStatusNumAuthActivities.x 	.1.3.6.1.4.1.4096.2.2.10000.3.4.1.4.1
+# THALES-PAYSHIELD-MIB::payShieldLmkStatusScheme.x				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.5.1
+# THALES-PAYSHIELD-MIB::payShieldLmkStatusAlgorithm.x				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.6.1
+# THALES-PAYSHIELD-MIB::payShieldLmkStatusLiveTest.x				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.7.1
+# THALES-PAYSHIELD-MIB::payShieldLmkStatusComments.x				.1.3.6.1.4.1.4096.2.2.10000.3.4.1.8.1
+# THALES-PAYSHIELD-MIB::payShieldLmkStatusCheckDigits.x			.1.3.6.1.4.1.4096.2.2.10000.3.4.1.9.1
 # detect function looks for sysDescr == 'payShield 10K'
 
 # Author: Rolf Koch - rolf.koch@netcetera.com - http://netcetera.com

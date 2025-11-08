@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # OIDs used:
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldUtilLoad.0		    .1.3.6.1.4.1.4096.2.2.10000.1.1.0
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldUtilHostCmdVolume.0	.1.3.6.1.4.1.4096.2.2.10000.1.2.0 = STRING: "60,1\nM2,00002;"
+# THALES-PAYSHIELD-MIB::payShieldUtilLoad.0		    .1.3.6.1.4.1.4096.2.2.10000.1.1.0
+# THALES-PAYSHIELD-MIB::payShieldUtilHostCmdVolume.0	.1.3.6.1.4.1.4096.2.2.10000.1.2.0 = STRING: "60,1\nM2,00002;"
 # detect function looks for sysDescr == 'payShield 10K'
 
 # Author: Rolf Koch - rolf.koch@netcetera.com - http://netcetera.com

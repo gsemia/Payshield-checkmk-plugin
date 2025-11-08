@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # OIDs used:
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldStateTamperState.0   .1.3.6.1.4.1.4096.2.2.10000.3.2.1.0
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldStateTamperDate.0    .1.3.6.1.4.1.4096.2.2.10000.3.2.2.0
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldStateTamperCause.0   .1.3.6.1.4.1.4096.2.2.10000.3.2.3.0
+# THALES-PAYSHIELD-MIB::payShieldStateTamperState.0   .1.3.6.1.4.1.4096.2.2.10000.3.2.1.0
+# THALES-PAYSHIELD-MIB::payShieldStateTamperDate.0    .1.3.6.1.4.1.4096.2.2.10000.3.2.2.0
+# THALES-PAYSHIELD-MIB::payShieldStateTamperCause.0   .1.3.6.1.4.1.4096.2.2.10000.3.2.3.0
 # detect function looks for sysDescr == 'payShield 10K'
 
 # Author: Rolf Koch - rolf.koch@netcetera.com - http://netcetera.com
