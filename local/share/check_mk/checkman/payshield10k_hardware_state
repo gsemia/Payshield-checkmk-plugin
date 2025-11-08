@@ -1,11 +1,12 @@
-title: Thales Payshield 10K hardware state 
+title: Thales Payshield 10K Hardware State
 agents: snmp
 catalog: hw/Payshield
-license: Propertary
-distribution: Propertary
+license: Proprietary
+distribution: Proprietary
 description:
- This check monitors the device hardware state of the FAN, PSU and BATTERY  
+ This check monitors the hardware state of a Thales Payshield HSM via SNMP. It reports the status of the device's fans, power supply units (PSU), and battery. The check provides detailed information about each hardware component and its SNMP-reported state.
 
 inventory:
  This check does not create inventory entries.
+
 

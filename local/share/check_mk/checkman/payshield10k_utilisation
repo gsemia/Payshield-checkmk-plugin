@@ -1,41 +1,25 @@
 title: Thales Payshield 10K Utilization
 agents: snmp
 catalog: hw/Payshield
-license: Propertary
-distribution: Propertary
+license: Proprietary
+distribution: Proprietary
 description:
- This check monitors the utilization of each individual Payshield Commands via SNMP. This check helps you to understand how much each command is used.
+ This check monitors the utilization of individual Payshield commands via SNMP. It helps you understand how frequently each command is used on the HSM.
 
- The check creates one check for each Command which should be monitored.
+ The check creates one service for each command to be monitored.
 
- 
- Prerequisite for these checks to work is that the Utilization statistics gathering on the Payshield HSM  must is enabled and that the Also the Measurement period for instantaneous statistics must be set to the same value as the frequency of the check_mk check frequency. It is recommended to set this value to 60 seconds on the hsm and on check_mk. 
+ Prerequisites:
+ - Utilization statistics gathering must be enabled on the Payshield HSM (see Payshield console command UTILENABLE; default is enabled).
+ - The measurement period for instantaneous statistics must match the check_mk check frequency (recommended: 60 seconds).
+ - Configure the measurement period with UTILCFG (default: 10 seconds; recommended: 60 seconds).
 
-
- - See Payshield Console Command UTILENABLE to enable the statistics gathering. (default is enabled)
-
-
- - See Payshield Console command UTILCFG to configure the Measurement period (default is 10 seconds. It is recommended to increase this period to 60 seconds).
-
- The output of the SNMP value should look like this:
-
+ The output of the SNMP value should look like:
  60,3
-
  EW,00001;M0,00881;M2,00319;
-
- The first line sais that the period of the measurement period was 60 seconds and that 3 commands were used.
-
- The second line sais which commands are used how much
-
- EW was used 1 time
-
- M0 was used 881 times
-
- M2 was used 319 times
-
+ The first line shows the measurement period and the number of commands used. The second line lists each command and its usage count.
 
 item:
- Names of the commands are configured in the monitoredcommands variable inside the check script
+ Names of the commands are configured in the monitoredcommands variable inside the check script.
 
 perfdata:
  One graph for payshield command will be created

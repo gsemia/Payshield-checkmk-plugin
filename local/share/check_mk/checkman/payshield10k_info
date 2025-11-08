@@ -1,41 +1,39 @@
-title: Thales Payshield 10K Info 
+title: Thales Payshield 10K Info
 agents: snmp
 catalog: hw/Payshield
-license: Propertary
-distribution: Propertary
+license: Proprietary
+distribution: Proprietary
 description:
- This check always gives back OK state and it's primary use is to report some important payshield hsm informations via check_mk
+ This check always returns OK and is primarily used to report important Payshield HSM information via SNMP. It provides details such as serial number, model, software versions, licensing, enabled commands, and PCI compliance status.
 
- The Output of check plugin provides: 
-
+ The output of the check plugin provides:
  - Payshield Info: {SERIALNUMBER}
 
- Long output of check plugin provides 
-
- - System Serial Number:  
- - System Date and Time: 
- - System Model: 
- - Fraud Pin Verify Limit Exceeded: 
- - Fraud Pin Attack Limits Exceeded: 
- - Version Software Base Release: 
- - Version Software Revision 
- - Version Software Build Number: 
- - Version Software HSM Core API Version: 
- - Version Software CPLD Version: 
- - Version Software SP Version: 
- - Version Software SP Boot Version: 
- - Version Software Bootstrap Version: 
- - Version Software Firmware Version: 
- - Version Software Deployment Version: 
- - Licensing Performance Model: 
- - Licensing Package: 
- - Licensing Optional License Count: 
- - Licensing Optional Licenses List: 
- - Licensing Crypto Algorithm Count: 
- - Licensing Crypto Algorithm List: 
- - Enabled Host Commands Count:
- - Enabled Host Commands List: 
- - Settings PCI Compliant: 
+ Long output of the check plugin provides:
+ - System Serial Number
+ - System Date and Time
+ - System Model
+ - Fraud Pin Verify Limit Exceeded
+ - Fraud Pin Attack Limits Exceeded
+ - Version Software Base Release
+ - Version Software Revision
+ - Version Software Build Number
+ - Version Software HSM Core API Version
+ - Version Software CPLD Version
+ - Version Software SP Version
+ - Version Software SP Boot Version
+ - Version Software Bootstrap Version
+ - Version Software Firmware Version
+ - Version Software Deployment Version
+ - Licensing Performance Model
+ - Licensing Package
+ - Licensing Optional License Count
+ - Licensing Optional Licenses List
+ - Licensing Crypto Algorithm Count
+ - Licensing Crypto Algorithm List
+ - Enabled Host Commands Count
+ - Enabled Host Commands List
+ - Settings PCI Compliant
 
 inventory:
  This check does not create inventory entries.

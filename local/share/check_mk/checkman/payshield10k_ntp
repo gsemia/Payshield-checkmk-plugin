@@ -4,19 +4,19 @@ catalog: hw/Payshield
 license: Proprietary
 distribution: Proprietary
 description:
- This check monitors the NTP (Network Time Protocol) status of Thales Payshield 10K devices.
+ This check monitors the NTP (Network Time Protocol) configuration and status of a Thales Payshield HSM via SNMP. It reports whether NTP is enabled, the list of configured NTP servers, their status, offset, stratum, and other synchronization details.
 
  The output of the check plugin provides:
-
- - NTP Offset (ms)
- - NTP Stratum
- - NTP Peer Status
+ - NTP enabled/disabled status
+ - NTP server IP addresses
+ - NTP offset (ms)
+ - NTP stratum
+ - NTP peer status
 
  Long output of the check plugin provides:
-
- - NTP Synchronization Status
- - NTP Server Address
- - NTP Last Update Time
+ - NTP synchronization status
+ - NTP server details
+ - Last update time
 
 inventory:
  This check does not create inventory entries.

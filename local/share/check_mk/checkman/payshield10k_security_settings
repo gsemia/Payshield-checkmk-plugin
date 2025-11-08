@@ -4,18 +4,25 @@ catalog: hw/Payshield
 license: Proprietary
 distribution: Proprietary
 description:
- This check monitors the security settings of Thales Payshield 10K devices.
+ This check monitors the security settings of a Thales Payshield HSM via SNMP. It reports PCI compliance, hash security and general settings, LMK status, and a wide range of other security-related parameters as provided by the device.
 
  The output of the check plugin provides:
-
- - PCI Compliance Status
- - Hash Security Settings
- - LMK Status
+ - PCI compliance status
+ - Hash security settings
+ - Hash general settings
+ - Hash configure command
+ - Hash audit setting
+ - Hash LMK
+ - User storage key length
+ - PIN length
+ - Encrypted PIN length
+ - ZMK length
+ - Decimalization tables
+ - Minimum HMAC length in bytes
 
  Long output of the check plugin provides:
-
- - Detailed Security Settings Table
- - All SNMP Security Parameters
+ - Full security settings table
+ - All SNMP security parameters
 
 inventory:
  This check does not create inventory entries.
