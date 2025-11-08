@@ -22,9 +22,9 @@
 # THALES-PAYSHIELD-MIB::payShieldLicensingOptionalLicensesList.0                      .1.3.6.1.4.1.4096.2.2.10000.8.4.0 = STRING: "001:LMKx5;"
 # THALES-PAYSHIELD-MIB::payShieldLicensingCryptoAlgorithmCount.0                      .1.3.6.1.4.1.4096.2.2.10000.8.5.0 = INTEGER: 3
 # THALES-PAYSHIELD-MIB::payShieldLicensingCryptoAlgorithmList.0                       .1.3.6.1.4.1.4096.2.2.10000.8.6.0 = STRING: "3DES;AES;RSA;"
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldEnabledHostCommandsCount.0                           .1.3.6.1.4.1.4096.2.2.10000.9.1.0 = INTEGER: 38
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldEnabledHostCommandsList.0                            .1.3.6.1.4.1.4096.2.2.10000.9.2.0 = STRING: "A0;A6;A8;B2;BS;BU;BW;CC;CS;CW;CY;EI;EO;EW;EY;GI;GK;IO;IQ;IU;IW;IY;L0;L8;LG;LQ;LS;LU;LW;LY;M0;M2;M4;N0;NC;NO;RA;RY;"
-# THALES-ESECURITY-PAYSHIELD-MIB::payShieldSettingsPCICompliant.0								.1.3.6.1.4.1.4096.2.2.10000.15.1.0 = INTEGER: 1
+# THALES-PAYSHIELD-MIB::payShieldEnabledHostCommandsCount.0                           .1.3.6.1.4.1.4096.2.2.10000.9.1.0 = INTEGER: 38
+# THALES-PAYSHIELD-MIB::payShieldEnabledHostCommandsList.0                            .1.3.6.1.4.1.4096.2.2.10000.9.2.0 = STRING: "A0;A6;A8;B2;BS;BU;BW;CC;CS;CW;CY;EI;EO;EW;EY;GI;GK;IO;IQ;IU;IW;IY;L0;L8;LG;LQ;LS;LU;LW;LY;M0;M2;M4;N0;NC;NO;RA;RY;"
+# THALES-PAYSHIELD-MIB::payShieldSettingsPCICompliant.0								.1.3.6.1.4.1.4096.2.2.10000.15.1.0 = INTEGER: 1
 # detect function looks for sysDescr == 'payShield 10K'
 
 # Author: Rolf Koch - rolf.koch@netcetera.com - http://netcetera.com
